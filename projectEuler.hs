@@ -59,6 +59,7 @@ problemFour = maximum [multiplied |
 
 -- Problem Five: Smallest Multiple
 -- This solution is pretty slow tbh
+-- #TODO: Find a way to do this better
 smallestMultiple' :: Integral a => a -> a -> a
 smallestMultiple' x y = head $ take 1 [a |
     a <- [y,2*y..], all (\x -> a `mod` x == 0) [x..y]]
@@ -79,6 +80,7 @@ problemSix = difference $ sumSquareSquareSum 1 100
 
 -- Problem Seven: 10001st prime
 -- This solution slow AF 😭
+-- #TODO: Find a way to do this better
 isPrime :: Int -> Bool
 isPrime 1 = False
 isPrime x = null $ [y | y <- [2..x `div` 2], x `mod` y == 0]
@@ -90,8 +92,8 @@ problemSeven :: Int
 problemSeven = primes !! 10000
 
 -- Problem Eight: Largest product in a series
-thousandDigitNumber :: Integer
-thousandDigitNumber = read
+thousandDigitNumber :: [Char]
+thousandDigitNumber =
     "73167176531330624919225119674426574742355349194934\
     \96983520312774506326239578318016984801869478851843\
     \85861560789112949495459501737958331952853208805511\
@@ -111,4 +113,38 @@ thousandDigitNumber = read
     \07198403850962455444362981230987879927244284909188\
     \84580156166097919133875499200524063689912560717606\
     \05886116467109405077541002256983155200055935729725\
-    \71636269561882670428252483600823257530420752963450" :: Integer
+    \71636269561882670428252483600823257530420752963450"
+
+digitToInt :: Char -> Int
+digitToInt x = fromEnum x - fromEnum '0'
+
+thousandDigitNumber' :: [Int]
+thousandDigitNumber' = [digitToInt x | x <- thousandDigitNumber]
+
+slice :: Int -> Int -> [a] -> [a]
+slice x y = drop x . take y
+
+
+digitProduct :: Integer -> Integer
+digitProduct x = product [read $ y:[] | y <- show x]
+
+problemEight :: Integer
+problemEight = maximum [digitProduct $ read number |
+    x <- [0..1001-13], let number = slice x (x + 13) thousandDigitNumber]
+
+-- Problem 9: Special Pythagorean triplet
+pythagoreanTriplets :: [(Int, Int, Int)]
+pythagoreanTriplets = [(a, b, c) | c <- [1..], b <- [1..c-1], a <- [1..b-1], a^2 + b^2 == c^2]
+
+productTriplet :: (Int, Int, Int) -> Int
+productTriplet (a, b, c) = a * b * c
+
+extractMaybe :: Maybe a -> a
+extractMaybe x = case x of
+                   Just x -> x
+                   Nothing -> error "Nothing :("
+
+-- #TODO: Find a way to do this better (Monads)
+problemNine :: Int
+problemNine = productTriplet $ extractMaybe $
+    find (\(a, b, c) -> a + b + c == 1000) pythagoreanTriplets
