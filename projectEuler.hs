@@ -1,12 +1,12 @@
 import Data.List (find, group)
 
--- Problem One: Multiples of 3 and 5
-problemOne :: Integral a => a -> a
-problemOne x = sum [y |
+-- Problem 1: Multiples of 3 and 5
+problem1 :: Integral a => a -> a
+problem1 x = sum [y |
     y <- take (fromIntegral x - 1) [1..],
     y `mod` 3 == 0 || y `mod` 5 == 0]
 
--- Problem Two: Even Fibonacci Numbers
+-- Problem 2: Even Fibonacci Numbers
 getFib :: Integral a => a -> a
 getFib x = if x < 2 then x
                     else getFib (x - 1) + getFib (x - 2)
@@ -17,10 +17,10 @@ fib = [getFib x | x <- [0..]]
 fib4mil :: Integral a => [a]
 fib4mil = takeWhile (\x -> x < 4000000) fib
 
-problemTwo :: Integral a => a
-problemTwo = sum [x | x <- fib4mil, x `mod` 2 == 0]
+problem2 :: Integral a => a
+problem2 = sum [x | x <- fib4mil, x `mod` 2 == 0]
 
--- Problem Three: Largest Prime Factor
+-- Problem 3: Largest Prime Factor
 primeFactors :: Integral a => a -> [a]
 primeFactors 1 = []
 primeFactors n = let factors = 2 : [3,5..n-1]
@@ -28,10 +28,10 @@ primeFactors n = let factors = 2 : [3,5..n-1]
          Just factor -> factor : primeFactors (n `div` factor)
          Nothing -> [n]
 
-problemThree :: Integral a => a
-problemThree = last (primeFactors 600851475143)
+problem3 :: Integral a => a
+problem3 = last (primeFactors 600851475143)
 
--- Problem Four: Largest palindrome product
+-- Problem 4: Largest palindrome product
 -- This is my original attempt at reversing (It sucks 😢)
 isPalindrome' :: Integral a => a -> Bool
 isPalindrome' x = let y = show $ fromIntegral x in y == reverse y
@@ -51,47 +51,51 @@ reverseIntegral = reverseIntegral 0
 isPalindrome :: Integral a => a -> Bool
 isPalindrome x = x == reverseIntegral x
 
-problemFour :: Integral a => a
-problemFour = maximum [multiplied |
+problem4 :: Integral a => a
+problem4 = maximum [multiplied |
     x <- [100..999], y <- [100..999],
     let multiplied = x * y,
     isPalindrome multiplied]
 
--- Problem Five: Smallest Multiple
+-- Problem 5: Smallest Multiple
 -- This solution is pretty slow tbh
 -- #TODO: Find a way to do this better
 smallestMultiple' :: Integral a => a -> a -> a
 smallestMultiple' x y = head $ take 1 [a |
     a <- [y,2*y..], all (\x -> a `mod` x == 0) [x..y]]
 
+problem5 :: Integer
+problem5 = smallestMultiple' 1 10
+
 -- Maybe use this for later?
 primeExponents :: Integral a => a -> [(a, Int)]
 primeExponents x = [(head y, length y) | y <- group $ primeFactors x]
 
--- Problem Six: Sum square difference
+-- Problem 6: Sum square difference
 sumSquareSquareSum :: Integral a => a -> a -> (a, a)
-sumSquareSquareSum x y = (sum [z * z | z <- [x..y]], let sum' = sum [x..y] in sum' * sum')
+sumSquareSquareSum x y = (sum [z * z | z <- [x..y]],
+    let sum' = sum [x..y] in sum' * sum')
 
 difference :: Integral a => (a, a) -> a
 difference (x, y) = y - x
 
-problemSix :: Integral a => a
-problemSix = difference $ sumSquareSquareSum 1 100
+problem6 :: Integral a => a
+problem6 = difference $ sumSquareSquareSum 1 100
 
--- Problem Seven: 10001st prime
--- This solution slow AF 😭
--- #TODO: Find a way to do this better
+-- Problem 7: 10001st prime
 isPrime :: Int -> Bool
 isPrime 1 = False
-isPrime x = null $ [y | y <- [2..x `div` 2], x `mod` y == 0]
+isPrime x = null $ [y |
+    y <- 2:[3,5..(round . sqrt . fromIntegral) x + 1],
+    x `mod` y == 0]
 
 primes :: [Int]
-primes = [x | x <- 2:[3,5..], isPrime x]
+primes = 2:[x | x <- [3,5..], isPrime x]
 
-problemSeven :: Int
-problemSeven = primes !! 10000
+problem7 :: Int
+problem7 = primes !! 10000
 
--- Problem Eight: Largest product in a series
+-- Problem 8: Largest product in a series
 thousandDigitNumber :: [Char]
 thousandDigitNumber =
     "73167176531330624919225119674426574742355349194934\
@@ -128,13 +132,16 @@ slice x y = drop x . take y
 digitProduct :: Integer -> Integer
 digitProduct x = product [read $ y:[] | y <- show x]
 
-problemEight :: Integer
-problemEight = maximum [digitProduct $ read number |
-    x <- [0..1001-13], let number = slice x (x + 13) thousandDigitNumber]
+problem8 :: Integer
+problem8 = maximum [digitProduct $ read number |
+    x <- [0..1001-13],
+    let number = slice x (x + 13) thousandDigitNumber]
 
 -- Problem 9: Special Pythagorean triplet
 pythagoreanTriplets :: [(Int, Int, Int)]
-pythagoreanTriplets = [(a, b, c) | c <- [1..], b <- [1..c-1], a <- [1..b-1], a^2 + b^2 == c^2]
+pythagoreanTriplets = [(a, b, c) |
+    c <- [1..], b <- [1..c-1], a <- [1..b-1],
+    a^2 + b^2 == c^2]
 
 productTriplet :: (Int, Int, Int) -> Int
 productTriplet (a, b, c) = a * b * c
@@ -148,3 +155,7 @@ extractMaybe x = case x of
 problemNine :: Int
 problemNine = productTriplet $ extractMaybe $
     find (\(a, b, c) -> a + b + c == 1000) pythagoreanTriplets
+
+-- Problem 10: Summation of primes
+problem10 :: Integer
+problem10 = sum $ takeWhile (<2000000) primes
