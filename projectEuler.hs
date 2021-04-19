@@ -2,13 +2,17 @@ import Data.List (find, group, maximumBy)
 import Data.Maybe (fromJust)
 import Data.Ord (comparing)
 
--- Problem 1: Multiples of 3 and 5
+-------------------------------------
+-- Problem 1: Multiples of 3 and 5 --
+-------------------------------------
 problem1 :: Integral a => a -> a
 problem1 x = sum [y |
     y <- take (fromIntegral x - 1) [1..],
     y `mod` 3 == 0 || y `mod` 5 == 0]
 
--- Problem 2: Even Fibonacci Numbers
+---------------------------------------
+-- Problem 2: Even Fibonacci Numbers --
+---------------------------------------
 getFib :: Integral a => a -> a
 getFib x = if x < 2 then x
                     else getFib (x - 1) + getFib (x - 2)
@@ -22,7 +26,9 @@ fib4mil = takeWhile (\x -> x < 4000000) fib
 problem2 :: Integral a => a
 problem2 = sum [x | x <- fib4mil, x `mod` 2 == 0]
 
--- Problem 3: Largest Prime Factor
+-------------------------------------
+-- Problem 3: Largest Prime Factor --
+-------------------------------------
 primeFactors :: Integral a => a -> [a]
 primeFactors 1 = []
 primeFactors x = let possibleFactors = 2:[3,5..x]
@@ -33,7 +39,9 @@ primeFactors x = let possibleFactors = 2:[3,5..x]
 problem3 :: Integral a => a
 problem3 = last (primeFactors 600851475143)
 
--- Problem 4: Largest palindrome product
+-------------------------------------------
+-- Problem 4: Largest palindrome product --
+-------------------------------------------
 -- This is my original attempt at reversing (It sucks 😢)
 isPalindrome' :: Integral a => a -> Bool
 isPalindrome' x = let y = show $ fromIntegral x in y == reverse y
@@ -59,7 +67,9 @@ problem4 = maximum [multiplied |
     let multiplied = x * y,
     isPalindrome multiplied]
 
--- Problem 5: Smallest Multiple
+----------------------------------
+-- Problem 5: Smallest Multiple --
+----------------------------------
 -- This solution is pretty slow tbh
 -- #TODO: Find a way to do this better
 smallestMultiple' :: Integral a => a -> a -> a
@@ -73,7 +83,9 @@ problem5 = smallestMultiple' 1 10
 primeExponents :: Integral a => a -> [(a, Int)]
 primeExponents x = [(head y, length y) | y <- group $ primeFactors x]
 
--- Problem 6: Sum square difference
+--------------------------------------
+-- Problem 6: Sum square difference --
+--------------------------------------
 sumSquareSquareSum :: Integral a => a -> a -> (a, a)
 sumSquareSquareSum x y = (sum [z * z | z <- [x..y]],
     let sum' = sum [x..y] in sum' * sum')
@@ -84,7 +96,9 @@ difference (x, y) = y - x
 problem6 :: Integral a => a
 problem6 = difference $ sumSquareSquareSum 1 100
 
--- Problem 7: 10001st prime
+------------------------------
+-- Problem 7: 10001st prime --
+------------------------------
 isPrime :: Int -> Bool
 isPrime 1 = False
 isPrime x = null $ [y |
@@ -97,7 +111,9 @@ primes = 2:[x | x <- [3,5..], isPrime x]
 problem7 :: Int
 problem7 = primes !! 10000
 
--- Problem 8: Largest product in a series
+--------------------------------------------
+-- Problem 8: Largest product in a series --
+--------------------------------------------
 thousandDigitNumber :: [Char]
 thousandDigitNumber =
     "73167176531330624919225119674426574742355349194934\
@@ -139,7 +155,9 @@ problem8 = maximum [digitProduct $ read number |
     x <- [0..1001-13],
     let number = slice x (x + 13) thousandDigitNumber]
 
--- Problem 9: Special Pythagorean triplet
+--------------------------------------------
+-- Problem 9: Special Pythagorean triplet --
+--------------------------------------------
 pythagoreanTriplets :: [(Int, Int, Int)]
 pythagoreanTriplets = [(a, b, c) |
     c <- [1..], b <- [1..c-1], a <- [1..b-1],
@@ -153,11 +171,15 @@ problemNine :: Int
 problemNine = productTriplet $ fromJust $
     find (\(a, b, c) -> a + b + c == 1000) pythagoreanTriplets
 
--- Problem 10: Summation of primes
+-------------------------------------
+-- Problem 10: Summation of primes --
+-------------------------------------
 problem10 :: Int
 problem10 = sum $ takeWhile (<2000000) primes
 
--- Problem 11: Largest product in a grid
+-------------------------------------------
+-- Problem 11: Largest product in a grid --
+-------------------------------------------
 -- TODO: For when I actually know how to do 2D lists in Haskell 😅
 theGrid = [
     [08, 02, 22, 97, 38, 15, 00, 40, 00, 75, 04, 05, 07, 78, 52, 12, 50, 77, 91, 08],
@@ -181,7 +203,12 @@ theGrid = [
     [20, 73, 35, 29, 78, 31, 90, 01, 74, 31, 49, 71, 48, 86, 81, 16, 23, 57, 05, 54],
     [01, 70, 54, 71, 83, 51, 54, 69, 16, 92, 33, 48, 61, 43, 52, 01, 89, 19, 67, 48]]
 
--- Problem 12: Highly divisible triangular number
+problem11 = [(i, x) | (i, x) <- zip [1..] theGrid]
+
+
+----------------------------------------------------
+-- Problem 12: Highly divisible triangular number --
+----------------------------------------------------
 triangleNumbers :: [Int]
 triangleNumbers = [x * (x + 1) `quot` 2 | x <- [1..]]
 
@@ -205,7 +232,10 @@ numFactors = length . factors
 problem12 :: Int
 problem12 = fromJust $ find (\x -> numFactors x > 500) triangleNumbers
 
--- Problem 13: Large sum 
+----------------------------
+-- Problem 13: Large sum  --
+----------------------------
+manyDigits :: [Integer]
 manyDigits = [
     37107287533902102798797998220837590246510135740250,
     46376937677490009712648124896970078050417018260538,
@@ -311,8 +341,10 @@ manyDigits = [
 problem13 :: [Char]
 problem13 = slice 0 10 $ (show . sum) [x | x <- manyDigits]
 
--- Problem 14: Longest Collatz sequence
--- TODO: My solution is mega slow once again. IDK how to optimize it tho
+------------------------------------------
+-- Problem 14: Longest Collatz sequence --
+------------------------------------------
+-- TODO: My solution is mega slow once again. IDK how to really optimize it though. Maybe memoization
 collatz :: Int -> [Int]
 collatz x
     | x == 1 = [x]
@@ -325,3 +357,31 @@ collatzSequences = [collatz x | x <- [1..]]
 problem14 :: (Int, Int)
 problem14 = maximumBy (comparing snd)
     [(fst x, length $ snd x) | x <- take 999999 $ zip [1..] collatzSequences]
+
+-------------------------------
+-- Problem 15: Lattice paths --
+-------------------------------
+factorial :: Integer -> Integer
+factorial x = product [2..x]
+
+-- Found this brute force solution that essentially makes pascals triangle but rotated.
+-- After that it indexes into the triangle to find the solution
+getPaths' :: Int -> Int -> Integer
+getPaths' x y = iterate (scanl1 (+)) (repeat 1) !! x !! y
+
+-- Using the permutative nature of the problem. You can organize x 0s and y 1s to get to
+-- the end. So then you just need to find the permutations with non-distinct properties
+getPaths :: Integer -> Integer -> Integer
+getPaths x y = factorial (x + y) `quot` (factorial x * factorial y)
+
+problem15 :: Integer
+problem15 = getPaths 20 20
+
+---------------------------------
+-- Problem 16: Power digit sum --
+---------------------------------
+digitSum :: Integer -> Integer
+digitSum x = sum [read $ y:[] | y <- show x]
+
+problem16 :: Integer
+problem16 = digitSum $ 2^1000
