@@ -146,7 +146,6 @@ thousandDigitNumber' = [digitToInt x | x <- thousandDigitNumber]
 slice :: Int -> Int -> [a] -> [a]
 slice x y = drop x . take y
 
-
 digitProduct :: Integer -> Integer
 digitProduct x = product [read [y] | y <- show x]
 
