@@ -21,10 +21,10 @@ fib :: Integral a => [a]
 fib = [getFib x | x <- [0..]]
 
 fib4mil :: Integral a => [a]
-fib4mil = takeWhile (\x -> x < 4000000) fib
+fib4mil = takeWhile (< 4000000) fib
 
 problem2 :: Integral a => a
-problem2 = sum [x | x <- fib4mil, x `mod` 2 == 0]
+problem2 = sum [x | x <- fib4mil, even x]
 
 -------------------------------------
 -- Problem 3: Largest Prime Factor --
@@ -148,7 +148,7 @@ slice x y = drop x . take y
 
 
 digitProduct :: Integer -> Integer
-digitProduct x = product [read $ y:[] | y <- show x]
+digitProduct x = product [read [y] | y <- show x]
 
 problem8 :: Integer
 problem8 = maximum [digitProduct $ read number |
@@ -356,7 +356,7 @@ collatzSequences = [collatz x | x <- [1..]]
 
 problem14 :: (Int, Int)
 problem14 = maximumBy (comparing snd)
-    [(fst x, length $ snd x) | x <- take 999999 $ zip [1..] collatzSequences]
+    [(x, length y) | (x, y) <- take 999999 $ zip [1..] collatzSequences]
 
 -------------------------------
 -- Problem 15: Lattice paths --
@@ -381,7 +381,7 @@ problem15 = getPaths 20 20
 -- Problem 16: Power digit sum --
 ---------------------------------
 digitSum :: Integer -> Integer
-digitSum x = sum [read $ y:[] | y <- show x]
+digitSum x = sum [read [y] | y <- show x]
 
 problem16 :: Integer
 problem16 = digitSum $ 2^1000
