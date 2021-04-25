@@ -70,14 +70,19 @@ problem4 = maximum [multiplied |
 ----------------------------------
 -- Problem 5: Smallest Multiple --
 ----------------------------------
--- This solution is pretty slow tbh
+-- These solutions are pretty slow tbh
 -- #TODO: Find a way to do this better
-smallestMultiple' :: Integral a => a -> a -> a
-smallestMultiple' x y = head $ take 1 [a |
-    a <- [y,2*y..], all (\x -> a `mod` x == 0) [x..y]]
+smallestMultiple' :: Int -> Int -> Int
+smallestMultiple' x y = head [
+    a | a <- [y,2*y..],
+    all (\b -> a `mod` b == 0) [x..y]]
 
-problem5 :: Integer
-problem5 = smallestMultiple' 1 10
+smallestMultiple :: Int -> Int -> Int
+smallestMultiple x y = fromJust $ find (\a -> all (\b -> a `rem` b == 0) [x..y]) [y,2*y..]
+
+
+problem5 :: Int
+problem5 = smallestMultiple 1 10
 
 -- Maybe use this for later?
 primeExponents :: Integral a => a -> [(a, Int)]
