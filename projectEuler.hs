@@ -13,44 +13,46 @@ problem1 x = sum [y |
 ---------------------------------------
 -- Problem 2: Even Fibonacci Numbers --
 ---------------------------------------
-getFib :: Integral a => a -> a
-getFib x = if x < 2 then x
-                    else getFib (x - 1) + getFib (x - 2)
+getFib :: Int -> Int
+getFib x
+  | x < 0 = error "You can't have negative Fibonacci numbers?"
+  | x < 2 = x
+  | otherwise = getFib (x-1) + getFib (x-2)
 
-fib :: Integral a => [a]
+fib :: [Int]
 fib = [getFib x | x <- [0..]]
 
-fib4mil :: Integral a => [a]
+fib4mil :: [Int]
 fib4mil = takeWhile (< 4000000) fib
 
-problem2 :: Integral a => a
+problem2 :: Int
 problem2 = sum [x | x <- fib4mil, even x]
 
 -------------------------------------
 -- Problem 3: Largest Prime Factor --
 -------------------------------------
-primeFactors :: Integral a => a -> [a]
+primeFactors :: Int -> [Int]
 primeFactors 1 = []
 primeFactors x = let possibleFactors = 2:[3,5..x]
     in case find (\y -> (x `rem` y) == 0) possibleFactors of
          Just factor -> factor : primeFactors (x `quot` factor)
          Nothing -> [x]
 
-problem3 :: Integral a => a
+problem3 :: Int
 problem3 = last (primeFactors 600851475143)
 
 -------------------------------------------
 -- Problem 4: Largest palindrome product --
 -------------------------------------------
 -- This is my original attempt at reversing (It sucks 😢)
-isPalindrome' :: Integral a => a -> Bool
+isPalindrome' :: Int -> Bool
 isPalindrome' x = let y = show $ fromIntegral x in y == reverse y
 
 -- I found this reversal algo online and it's super cool
--- quotRem calculates the quotient and remainder and puts it into a Tuple
+-- quotRem calculates the quotient and remainder and puts it in a Tuple
 -- It even makes use of the fact that every function is curried
 -- https://stackoverflow.com/questions/26315917/decidein-haskell-if-a-number-is-or-not-a-palindrome-without-using-lists/
-reverseIntegral :: Integral a => a -> a
+reverseIntegral :: Int -> Int
 reverseIntegral = reverseIntegral 0
     where reverseIntegral result 0 = result
           reverseIntegral result original =
@@ -58,10 +60,10 @@ reverseIntegral = reverseIntegral 0
                in reverseIntegral (10 * result + remainder) quotient
 
 -- This is the latest with the cool reversal algo
-isPalindrome :: Integral a => a -> Bool
+isPalindrome :: Int -> Bool
 isPalindrome x = x == reverseIntegral x
 
-problem4 :: Integral a => a
+problem4 :: Int
 problem4 = maximum [multiplied |
     x <- [100..999], y <- [100..999],
     let multiplied = x * y,
@@ -78,27 +80,28 @@ smallestMultiple' x y = head [
     all (\b -> a `mod` b == 0) [x..y]]
 
 smallestMultiple :: Int -> Int -> Int
-smallestMultiple x y = fromJust $ find (\a -> all (\b -> a `rem` b == 0) [x..y]) [y,2*y..]
+smallestMultiple x y = fromJust $
+    find (\a -> all (\b -> a `rem` b == 0) [x..y]) [y,2*y..]
 
 
 problem5 :: Int
 problem5 = smallestMultiple 1 10
 
 -- Maybe use this for later?
-primeExponents :: Integral a => a -> [(a, Int)]
+primeExponents :: Int -> [(Int, Int)]
 primeExponents x = [(head y, length y) | y <- group $ primeFactors x]
 
 --------------------------------------
 -- Problem 6: Sum square difference --
 --------------------------------------
-sumSquareSquareSum :: Integral a => a -> a -> (a, a)
+sumSquareSquareSum :: Int -> Int -> (Int, Int)
 sumSquareSquareSum x y = (sum [z * z | z <- [x..y]],
     let sum' = sum [x..y] in sum' * sum')
 
-difference :: Integral a => (a, a) -> a
+difference :: (Int, Int) -> Int
 difference (x, y) = y - x
 
-problem6 :: Integral a => a
+problem6 :: Int
 problem6 = difference $ sumSquareSquareSum 1 100
 
 ------------------------------
@@ -151,10 +154,10 @@ thousandDigitNumber' = [digitToInt x | x <- thousandDigitNumber]
 slice :: Int -> Int -> [a] -> [a]
 slice x y = drop x . take y
 
-digitProduct :: Integer -> Integer
+digitProduct :: Int -> Int
 digitProduct x = product [read [y] | y <- show x]
 
-problem8 :: Integer
+problem8 :: Int
 problem8 = maximum [digitProduct $ read number |
     x <- [0..1001-13],
     let number = slice x (x + 13) thousandDigitNumber]
@@ -365,27 +368,27 @@ problem14 = maximumBy (comparing snd)
 -------------------------------
 -- Problem 15: Lattice paths --
 -------------------------------
-factorial :: Integer -> Integer
+factorial :: Int -> Int
 factorial x = product [2..x]
 
 -- Found this brute force solution that essentially makes pascals triangle but rotated.
 -- After that it indexes into the triangle to find the solution
-getPaths' :: Int -> Int -> Integer
+getPaths' :: Int -> Int -> Int
 getPaths' x y = iterate (scanl1 (+)) (repeat 1) !! x !! y
 
 -- Using the permutative nature of the problem. You can organize x 0s and y 1s to get to
 -- the end. So then you just need to find the permutations with non-distinct properties
-getPaths :: Integer -> Integer -> Integer
+getPaths :: Int -> Int -> Int
 getPaths x y = factorial (x + y) `quot` (factorial x * factorial y)
 
-problem15 :: Integer
+problem15 :: Int
 problem15 = getPaths 20 20
 
 ---------------------------------
 -- Problem 16: Power digit sum --
 ---------------------------------
-digitSum :: Integer -> Integer
+digitSum :: Int -> Int
 digitSum x = sum [read [y] | y <- show x]
 
-problem16 :: Integer
+problem16 :: Int
 problem16 = digitSum $ 2^1000
