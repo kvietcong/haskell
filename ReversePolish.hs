@@ -1,4 +1,5 @@
 import Data.Maybe (fromJust, isJust)
+import Data.List (foldl')
 
 
 ----------------------
@@ -35,31 +36,59 @@ reversePolish'' = read . head . reversePolish' . words
 -- After looking at and understanding Learn You a Haskell's solution --
 -----------------------------------------------------------------------
 
--- All available operators
-operators :: [(String, Either (Float -> Float -> Float) ([Float] -> Float))]
-operators = [ ("+", Left (+))
-            , ("*", Left (*))
-            , ("-", Left (-))
-            , ("/", Left (/))
-            , ("^", Left (**))
-            , ("sum", Right sum)
-            , ("min", Right minimum)
-            , ("max", Right maximum)
-            , ("avg", Right (\xs -> sum xs / (fromIntegral . length) xs))]
+-- Operator type with three types of Arity
+data Operator unary binary nary = Unary unary | Binary binary | Nary nary
 
-reversePolish :: String -> Float
-reversePolish = head . foldl reversePolish [] . words
-    where reversePolish nums next
+-- All available operators for the program
+operators :: [( String
+              , Operator 
+                    (Float -> Float) 
+                    (Float -> Float -> Float)
+                    ([Float] -> Float)
+              )]
+operators = [ ("log", Unary log)
+            , ("sqrt", Unary sqrt)
+            , ("exp", Unary exp)
+            , ("sin", Unary sin)
+            , ("cos", Unary cos)
+            , ("tan", Unary tan)
+            , ("sinh", Unary sinh)
+            , ("cosh", Unary cosh)
+            , ("tanh", Unary tanh)
+            , ("round", Unary $ fromIntegral . round)
+            , ("ceiling", Unary $ fromIntegral . ceiling)
+            , ("floor", Unary $ fromIntegral . floor)
+
+            , ("+", Binary (+))
+            , ("*", Binary (*))
+            , ("-", Binary (-))
+            , ("/", Binary (/))
+            , ("^", Binary (**))
+
+            , ("sum", Nary sum)
+            , ("min", Nary minimum)
+            , ("max", Nary maximum)
+            , ("avg", Nary (\xs -> sum xs / (fromIntegral . length) xs))]
+
+polish :: Bool -> String -> Float
+polish reversed
+    | reversed = head . foldl' (flip polish) [] . words
+    | otherwise = head . foldr polish [] . words
+    where polish next nums
             -- If the next value is an operator, then operate
             | isJust opLookup = case operator of
-                                  Left op -> op y x:ys
-                                  Right op -> [op nums]
+                                  Unary op -> op x:xs
+                                  Binary op -> if reversed 
+                                                  then op y x:ys 
+                                                  else op x y:ys
+                                  Nary op -> [op nums]
             -- If the next value is just a value, add it onto
             -- the "stack"
             | otherwise = read next:nums
             where opLookup = lookup next operators
                   operator = fromJust opLookup
                   x = head nums
+                  xs = drop 1 nums
                   y = nums !! 1
                   ys = drop 2 nums
 
@@ -68,27 +97,36 @@ reversePolish = head . foldl reversePolish [] . words
 -- True understanding of Monads will let me see the true light XD
 solveRPN :: String -> Float  
 solveRPN = head . foldl foldingFunction [] . words  
-    where   foldingFunction (x:y:ys) "*" = (x * y):ys  
-            foldingFunction (x:y:ys) "+" = (x + y):ys  
-            foldingFunction (x:y:ys) "-" = (y - x):ys  
-            foldingFunction (x:y:ys) "/" = (y / x):ys  
-            foldingFunction (x:y:ys) "^" = (y ** x):ys  
-            foldingFunction (x:xs) "ln" = log x:xs  
-            foldingFunction xs "sum" = [sum xs]  
-            foldingFunction xs numberString = read numberString:xs
+  where foldingFunction (x:y:ys) "*" = (x * y):ys  
+        foldingFunction (x:y:ys) "+" = (x + y):ys  
+        foldingFunction (x:y:ys) "-" = (y - x):ys  
+        foldingFunction (x:y:ys) "/" = (y / x):ys  
+        foldingFunction (x:y:ys) "^" = (y ** x):ys  
+        foldingFunction (x:xs) "ln" = log x:xs  
+        foldingFunction xs "sum" = [sum xs]  
+        foldingFunction xs numberString = read numberString:xs
 
-reversePolishPrompt = do
-    putStrLn "\nPlease enter your reverse polish statement (space delimiters)"
-    polish <- getLine
+polishStatement :: Bool -> String
+polishStatement reversed
+    | reversed = '\n':"Please enter your Reverse Polish statement (space delimiters)"
+    | otherwise = '\n':"Please enter your Polish statement (space delimiters)"
 
-    print $ reversePolish polish
+polishPrompt = do
+    putStrLn $ '\n':"Polish or Reverse Polish? (p for Polish)"
+    choice <- getLine
+    let reversed = choice /= "p"
 
-    putStrLn "Continue? [y/n]"
+    putStrLn $ polishStatement reversed
+    statement <- getLine
+
+    print $ polish reversed statement
+
+    putStrLn $ '\n':"Continue? [y/n]"
     continue <- getLine
     if continue `elem` ["yes", "y"]
-       then reversePolishPrompt
-       else putStrLn "Bye!"
+       then polishPrompt
+       else putStrLn $ '\n':"Bye!"
 
 main = do
-    putStrLn "Welcome to a bad Reverse Polish Calculator"
-    reversePolishPrompt
+    putStrLn "Welcome to my bad Polish Notation Solver"
+    polishPrompt
