@@ -1,49 +1,58 @@
-import Control.Monad (sequence)
+data Section = Section Int Int Int deriving Show
+data Choice = Top Int | Cross Int | Bottom Int deriving Show
 
-data Choice = Choice Int Int Int deriving Show
-data Side = Top Int | Cross Int | Bottom Int deriving Show
-
+fromSide :: Choice -> Int
 fromSide side = case side of
                   Top a -> a
                   Cross a -> a
                   Bottom b -> b
 
+roadSystem :: [Section]
+roadSystem = [ Section 0  50 10 
+             , Section 30 5  90 
+             , Section 20 40 2  
+             , Section 25 10 8 ]
 
-inputs = [[0    , 50    , 10 ]
-         ,[30   , 5     , 90 ]
-         ,[20   , 40    , 2  ]
-         ,[25   , 10    , 8  ]]
+path :: [Choice]
+path = dropWhile ((== 0) . fromSide) $ (reverse . choose [Top 0]) roadSystem
+    where choose choices [] = choices
+          choose choices (Section cross top bot:sections) =
+              case head choices of
+                Top _ -> if top < cross + bot
+                            then choose (Top top:choices) sections
+                            else choose (Bottom bot:Cross cross:choices) sections
+                Bottom _ -> if bot < cross + top
+                               then choose (Bottom bot:choices) sections
+                               else choose (Top top:Cross cross:choices) sections
+                Cross _ -> error "This shouldn't happen"
 
-choices = map inputToChoice inputs
-    where inputToChoice input = let [a, b, c] = input in Choice a b c
+price :: Int
+price = sum $ fmap fromSide path
 
-path = dropWhile (\x -> fromSide x == 0) $ reverse $ choose [Top 0] choices
-    where choose steps [] = steps
-          choose steps (Choice cross top bot:choices) =
-              case step of
-                Top a -> if top < crossBot
-                             then choose (Top top:steps) choices
-                             else choose (Bottom bot:Cross cross:steps) choices
-                Bottom a -> if bot < crossTop
-                             then choose (Bottom bot:steps) choices
-                             else choose (Top top:Cross cross:steps) choices
-                where step = head steps
-                      crossTop = top + cross
-                      crossBot = bot + cross
+main :: IO ()
+main = do
+    putStrLn "This is the Road System"
+    print roadSystem
+    putStrLn $ '\n':"This is the Path"
+    print path
+    putStrLn $ '\n':"This is the Price"
+    print price
 
-price = sum $ map fromSide path
-
+{-
 ------------------------------------
 -- Learn You a Haskell's Solution --
 ------------------------------------
-data Section = Section { getA :: Int, getB :: Int, getC :: Int } deriving (Show)  
-type RoadSystem = [Section]  
+data Section' = Section' { getA :: Int, getB :: Int, getC :: Int } deriving (Show)  
+type RoadSystem = [Section']  
 
 data Label = A | B | C deriving (Show)  
 type Path = [(Label, Int)]
 
-roadStep :: (Path, Path) -> Section -> (Path, Path)  
-roadStep (pathA, pathB) (Section a b c) =   
+heathrowToLondon :: RoadSystem  
+heathrowToLondon = [Section' 50 10 30, Section' 5 90 20, Section' 40 2 25, Section' 10 8 0]
+
+roadStep :: (Path, Path) -> Section' -> (Path, Path)  
+roadStep (pathA, pathB) (Section' a b c) =   
     let priceA = sum $ map snd pathA  
         priceB = sum $ map snd pathB  
         forwardPriceToA = priceA + a  
@@ -64,3 +73,7 @@ optimalPath roadSystem =
     in  if sum (map snd bestAPath) <= sum (map snd bestBPath)  
             then reverse bestAPath  
             else reverse bestBPath
+
+pathPrice :: Int
+pathPrice = sum $ map snd $ optimalPath heathrowToLondon
+-}
