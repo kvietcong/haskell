@@ -99,8 +99,7 @@ computePolishStatement reversed
 polishPrompt :: IO ()
 polishPrompt = do
     putStrLn $ '\n':"Polish or Reverse Polish? (p for Polish)"
-    choice <- getLine
-    let reversed = choice /= "p"
+    reversed <- (/= "p") <$> getLine
 
     putStrLn $
         if reversed
@@ -112,10 +111,8 @@ polishPrompt = do
     print $ computePolishStatement reversed statement
 
     putStrLn $ '\n':"Continue? [y/n]"
-    continue <- getLine
-    if continue `elem` ["yes", "y"]
-       then polishPrompt
-       else putStrLn $ '\n':"Bye!"
+    continue <- flip elem ["yes", "y"] <$> getLine
+    if continue then polishPrompt else putStrLn $ '\n':"Bye!"
 
 -- |Program entry point
 main :: IO ()
