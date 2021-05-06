@@ -1,11 +1,3 @@
-module PolishNotation
-( computePolishStatement
-, operators
-, operators'
-, reversePolish'
-, reversePolish''
-) where
-
 import Data.Maybe (fromJust, isJust)
 import Data.List (foldl')
 
@@ -16,6 +8,7 @@ import Data.List (foldl')
 ----------------------
 -- A recursive approach that is a bit inflexible
 
+{-
 operators' :: [(String, Float -> Float -> Float)]
 operators' = [ ("+", (+))
              , ("*", (*))
@@ -39,6 +32,7 @@ reversePolish' x
 
 reversePolish'' :: String -> Float
 reversePolish'' = read . head . reversePolish' . words
+-}
 
 
 -----------------------
@@ -47,12 +41,13 @@ reversePolish'' = read . head . reversePolish' . words
 -- After looking at and understanding
 -- Learn You a Haskell's solution
 
--- Operator type with three types of Arity
+-- |Data type that has represents three types of operators
+-- Unary, Binary, and N-Nary operators (based on arity)
 data Operator = Unary (Float -> Float)
               | Binary (Float -> Float -> Float) 
               | Nary ([Float] -> Float)
 
--- All available operators for the program
+-- |All available operators for the program
 operators :: [(String, Operator)]
 operators = [ ("log", Unary log)
             , ("sqrt", Unary sqrt)
@@ -79,28 +74,29 @@ operators = [ ("log", Unary log)
             , ("max", Nary maximum)
             , ("avg", Nary (\xs -> sum xs / (fromIntegral . length) xs))]
 
+-- |Given if the Polish statement is reversed or not, a
+-- Polish String statement will be calculated
 computePolishStatement :: Bool -> String -> Float
 computePolishStatement reversed
     | reversed = head . foldl' (flip compute) [] . words
     | otherwise = head . foldr compute [] . words
     where compute next nums
-            -- If the next value is an operator, then operate
             | isJust opLookup = case operator of
                                   Unary op -> op x:xs
                                   Binary op -> if reversed 
                                                   then op y x:ys 
                                                   else op x y:ys
                                   Nary op -> [op nums]
-            -- If the next value is just a value, add it onto
-            -- the "stack"
             | otherwise = read next:nums
             where opLookup = lookup next operators
                   operator = fromJust opLookup
                   x = head nums
                   xs = drop 1 nums
-                  y = nums !! 1
+                  y = (head . tail) nums
                   ys = drop 2 nums
 
+-- |Repeatable prompt for polish statement inputs
+polishPrompt :: IO ()
 polishPrompt = do
     putStrLn $ '\n':"Polish or Reverse Polish? (p for Polish)"
     choice <- getLine
@@ -108,8 +104,9 @@ polishPrompt = do
 
     putStrLn $
         if reversed
-           then '\n':"Please enter your Reverse Polish statement (space delimiters)"
-           else '\n':"Please enter your Polish statement (space delimiters)"
+           then '\n':"Please enter your Reverse Polish statement"
+           else '\n':"Please enter your Polish statement"
+    putStrLn "Use Space Delimiters"
     statement <- getLine
 
     print $ computePolishStatement reversed statement
@@ -120,6 +117,8 @@ polishPrompt = do
        then polishPrompt
        else putStrLn $ '\n':"Bye!"
 
+-- |Program entry point
+main :: IO ()
 main = do
     print "Welcome to KV's bad Polish Notation Solver"
     polishPrompt
@@ -127,6 +126,7 @@ main = do
 ------------------------------------
 -- Learn you a Haskell's solution --
 ------------------------------------
+{-
 -- When this clicked in my mind, my third eye twitched
 -- True understanding of Monads will let me see the true light XD
 solveRPN :: String -> Float  
@@ -139,3 +139,4 @@ solveRPN = head . foldl foldingFunction [] . words
         foldingFunction (x:xs) "ln" = log x:xs  
         foldingFunction xs "sum" = [sum xs]  
         foldingFunction xs numberString = read numberString:xs
+-}
