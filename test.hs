@@ -38,6 +38,23 @@ sayLame = (++) "You're Lame "
 isLame :: String -> Bool
 isLame x = x `elem` ["KV", "KV Le"]
 
+quickSort :: Ord a => [a] -> [a]
+quickSort [] = []
+quickSort (x:xs) = quickSort less ++ [x] ++ quickSort greater
+    where less = filter (<=x) xs
+          greater = filter (>x) xs
+
+concatList' :: [[a]] -> [a]
+concatList' xss = [x | xs <- xss, x <- xs]
+
+flatCounter :: (Ord a) => [[a]] -> [(Int, a)]
+flatCounter list = foldl f [] $ flatSort list
+    where flatSort = quickSort . concatList'
+          f [] next = [(1, next)]
+          f (x:xs) next = if snd x == next
+                             then (fst x + 1, next):xs
+                             else (1, next):x:xs
+
 main = do
     putStrLn "Hello, what's your name?"
     name <- getLine
