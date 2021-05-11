@@ -34,7 +34,7 @@ roadSystem = [ Section 0  50 10
              , Section 20 40 2  
              , Section 25 10 8 ]
 
--- |Retrives the best choices to minimize the price associated
+-- |Retrieves the best choices to minimize the price associated
 bestPath :: [Section] -> [Choice]
 bestPath = dropWhile ((== 0) . fromChoice) . reverse . choose [Top 0]
     where choose choices [] = choices
@@ -61,8 +61,8 @@ main = do
 
     putStrLn $ '\n':"The best path is: " ++ show path
 
-    putStrLn $ '\n':"This is the best price: " ++
-        (show . price) path ++ " units"
+    putStrLn $ '\n':"This is the best price: "
+               ++ (show . price) path ++ " units"
 
 ------------------------------------
 -- Learn You a Haskell's Solution --

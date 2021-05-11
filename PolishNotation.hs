@@ -1,8 +1,6 @@
 import Data.Maybe (fromJust, isJust)
 import Data.List (foldl')
 
-
-
 ----------------------
 -- My First Attempt --
 ----------------------
