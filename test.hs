@@ -1,6 +1,15 @@
 import Data.Maybe (isJust, fromJust)
 
+keep :: Eq a => (a -> Bool) -> [a] -> [a]
+keep = filter
+
+discard :: Eq a => (a -> Bool) -> [a] -> [a]
+discard predicate = filter $ not . predicate
+
+doubleMe :: Num a => a -> a
 doubleMe x = 2 * x
+
+doubleUs :: Num a => a -> a -> a
 doubleUs x y = doubleMe x + doubleMe y
 
 maximum' :: (Ord a) => [a] -> a
@@ -25,7 +34,7 @@ toSet (x:xs)
 uniques :: Eq a => [a] -> [a]
 uniques [] = []
 uniques (x:xs)
-  | x `elem` x' = filter (/=x) x'
+  | x `elem` x' = discard (==x) x'
   | otherwise = x:x'
   where x' = uniques xs
 
@@ -41,8 +50,8 @@ isLame x = x `elem` ["KV", "KV Le"]
 quickSort :: Ord a => [a] -> [a]
 quickSort [] = []
 quickSort (x:xs) = quickSort less ++ [x] ++ quickSort greater
-    where less = filter (<=x) xs
-          greater = filter (>x) xs
+    where less = keep (<=x) xs
+          greater = keep (>x) xs
 
 concatList' :: [[a]] -> [a]
 concatList' xss = [x | xs <- xss, x <- xs]

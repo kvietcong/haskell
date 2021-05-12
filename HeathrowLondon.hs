@@ -1,4 +1,10 @@
 {-|
+   Data structure that represents the choice taken when at
+   a section and its associated cost
+-}
+data Choice =  Cross Int | Top Int | Bottom Int deriving Show
+
+{-|
    Data structure that represents the price to choose the
    cross, top, or bottom path (In that order respectively)
 -}
@@ -6,12 +12,6 @@ data Section = Section { crossPrice :: Int
                        , topPrice :: Int
                        , bottomPrice :: Int }
                        deriving Show
-
-{-|
-   Data structure that represents the choice taken when at
-   a section and its associated cost
--}
-data Choice =  Cross Int | Top Int | Bottom Int deriving Show
 
 {-|
    Unwraps a Choice value into the amount of
@@ -28,15 +28,15 @@ fromChoice side = case side of
    in the Functionally Solving Problems chapter of
    the Learn You a Haskell Book
 -}
-roadSystem :: [Section]
-roadSystem = [ Section 0  50 10 
-             , Section 30 5  90 
-             , Section 20 40 2  
-             , Section 25 10 8 ]
+heathrowToLondonRoadSystem :: [Section]
+heathrowToLondonRoadSystem = [ Section 0  50 10 
+                             , Section 30 5  90 
+                             , Section 20 40 2  
+                             , Section 25 10 8 ]
 
 -- |Retrieves the best choices to minimize the price associated
-bestPath :: [Section] -> [Choice]
-bestPath = dropWhile ((== 0) . fromChoice) . reverse . choose [Top 0]
+findBestPath :: [Section] -> [Choice]
+findBestPath = dropWhile ((== 0) . fromChoice) . reverse . choose [Top 0]
     where choose choices [] = choices
           choose choices (Section cross top bot:sections) =
               case head choices of
@@ -49,20 +49,20 @@ bestPath = dropWhile ((== 0) . fromChoice) . reverse . choose [Top 0]
                 Cross _ -> error "This shouldn't happen"
 
 -- |Retrieves the total price of a given set of choices
-price :: [Choice] -> Int
-price = sum . fmap fromChoice
+getPrice :: [Choice] -> Int
+getPrice = sum . fmap fromChoice
 
 -- |Entry point that prints out the solutions
 main :: IO ()
 main = do
-    let path = bestPath roadSystem
+    let bestPath = findBestPath heathrowToLondonRoadSystem
 
-    putStrLn $ "The Road System: " ++ show roadSystem
+    putStrLn $ "The Road System: " ++ show heathrowToLondonRoadSystem
 
-    putStrLn $ '\n':"The best path is: " ++ show path
+    putStrLn $ '\n':"The best path is: " ++ show bestPath
 
     putStrLn $ '\n':"This is the best price: "
-               ++ (show . price) path ++ " units"
+               ++ (show . getPrice) bestPath ++ " units"
 
 ------------------------------------
 -- Learn You a Haskell's Solution --
