@@ -1,4 +1,5 @@
 import Data.Maybe (isJust, fromJust)
+import Data.Char (isSpace)
 
 keep :: Eq a => (a -> Bool) -> [a] -> [a]
 keep = filter
@@ -63,6 +64,11 @@ flatCounter list = foldl f [] $ flatSort list
           f (x:xs) next = if snd x == next
                              then (fst x + 1, next):xs
                              else (1, next):x:xs
+
+guardTesting string char 
+  | isSpace char && null string = "You have nothing and a space"
+  | isSpace char = "This is a space"
+  | otherwise = "LOL"
 
 main = do
     putStrLn "Hello, what's your name?"
