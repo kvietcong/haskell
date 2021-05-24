@@ -52,8 +52,8 @@ data JValue = JObject [(String, JValue)]
 
 instance Show JValue where
     show jVal = case jVal of
-        JObject objects     -> showObjects $ objects
-        JArray jValues      -> show jValues
+        JObject objects     -> showObjects objects
+        JArray jValues      -> surroundBracket . intercalate ", " $ map show jValues
         JString string      -> surroundQuote string
         JNumber number      -> show number
         JBool bool          -> map toLower . show $ bool
@@ -99,14 +99,6 @@ predicateParser predicate = Parser $
                              else Nothing
                 []     -> Nothing
 
--- I don't think this is ever needed (maybe)
-parseIfParser :: Parser a -> (a -> Bool) -> Parser a
-parseIfParser parser predicate = Parser $ \input -> do
-    (rest, parsed) <- runParser parser input
-    if predicate parsed
-       then pure (rest, parsed)
-       else Nothing
-
 inBetweenParser :: Parser a -> Parser b -> Parser c -> Parser a
 inBetweenParser betweenParser openParser closeParser =
     openParser *> betweenParser <* closeParser
@@ -141,6 +133,10 @@ seperatedByParser parser delimiter = do
       (Just element, Nothing)   -> pure [element]
       _ -> empty
 
+-- Only supports escaped sequences of one character length (No unicode yet)
+jCharParser :: Parser Char
+jCharParser = (charParser '\\' *> anyCharParser) <|> predicateParser (/='"')
+
 jNullParser :: Parser JValue
 jNullParser = JNull <$ stringParser "null"
 
@@ -172,13 +168,8 @@ jNumParser = Parser $ \input -> do
         Just number -> pure (rest, JNumber number)
         _           -> Nothing
 
--- Only supports escaped sequences of one character length (No unicode yet)
 jStringParser :: Parser JValue
-jStringParser = JString <$> surroundParser (many jCharacter) (charParser '"')
-    where jCharacter = (charParser '\\' *> anyCharParser) <|> predicateParser (/='"')
-
-jValueParser :: Parser JValue
-jValueParser = jNullParser <|> jBoolParser <|> jNumParser <|> jStringParser <|> jArrayParser <|> jObjectParser
+jStringParser = JString <$> surroundParser (many jCharParser) (charParser '"')
 
 jArrayParser :: Parser JValue
 jArrayParser = JArray <$>
@@ -191,8 +182,7 @@ jObjectParser :: Parser JValue
 jObjectParser = JObject <$>
     inBetweenParser (elementsParser <|> ([] <$ whitespaceParser)) (charParser '{') (charParser '}')
         where elementParser = do
-                  let jCharacter = (charParser '\\' *> anyCharParser) <|> predicateParser (/='"')
-                  key <- surroundParser (many jCharacter) (charParser '"')
+                  key <- surroundParser (many jCharParser) (charParser '"')
                   _ <- whitespaceParser *> charParser ':' <* whitespaceParser
                   value <- jValueParser
                   pure (key, value)
@@ -200,17 +190,17 @@ jObjectParser = JObject <$>
                                (whitespaceParser *> elementParser <* whitespaceParser)
                                (charParser ',')
 
+jValueParser :: Parser JValue
+jValueParser = jNullParser <|> jBoolParser <|> jNumParser <|> jStringParser <|> jArrayParser <|> jObjectParser
+
 parseJSON :: String -> Maybe (String, JValue)
 parseJSON = runParser jValueParser
 
-parseJSON' :: String -> IO (Maybe (String, JValue))
-parseJSON' path = do
-    handle <- openFile path ReadMode
-    jsonString <- hGetContents handle
-    pure $ parseJSON jsonString
+parseJSONFile :: String -> IO (Maybe (String, JValue))
+parseJSONFile path = parseJSON <$> readFile path
 
 main :: IO ()
 main = do
-    parsedValue <- parseJSON' "testJSON.json"
+    parsedValue <- parseJSONFile "testJSON.json"
     print parsedValue
     pure ()
