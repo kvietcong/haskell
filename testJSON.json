@@ -1,0 +1,39 @@
+{
+	"random": 44,
+	"random float": 40.498,
+	"bool": false,
+	"date": "1984-06-27",
+	"regEx": "helloooooooooooooooooooooooooooooooooooooooooooooooooooo world",
+	"enum": "json",
+	"firstname": "Lorne",
+	"lastname": "Nea",
+	"city": "Milwaukee",
+	"country": "Belarus",
+	"countryCode": "NE",
+	"email uses current data": "Lorne.Nea@gmail.com",
+	"email from expression": "Lorne.Nea@yopmail.com",
+	"array": [
+		"Sara-Ann",
+		"Blondelle",
+		"Paola",
+		"Jenilee",
+		"Kylynn"
+	],
+	"array of objects": [
+		{
+			"index": 0,
+			"index start at 5": 5
+		},
+		{
+			"index": 1,
+			"index start at 5": 6
+		},
+		{
+			"index": 2,
+			"index start at 5": 7
+		}
+	],
+	"Ulrike": {
+		"age": 74
+	}
+}

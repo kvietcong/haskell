@@ -6,6 +6,7 @@ import Control.Monad
 import Data.Functor
 import Data.Maybe
 import Data.Tuple
+import System.IO
 import Text.Read
 
 {-
@@ -51,7 +52,7 @@ data JValue = JObject [(String, JValue)]
 
 instance Show JValue where
     show jVal = case jVal of
-        JObject objects     -> surroundBrace . showObjects $ objects
+        JObject objects     -> showObjects $ objects
         JArray jValues      -> show jValues
         JString string      -> surroundQuote string
         JNumber number      -> show number
@@ -82,37 +83,85 @@ instance Alternative Parser where
     (Parser parser) <|> (Parser parser') =
         Parser $ \toParse -> parser toParse <|> parser' toParse
 
+-- `function` returns a new parser based on what is outputted from `parser`
 instance Monad Parser where
-    parser >>= function = Parser $ \toParse-> case runParser parser toParse of
-                                               Just (toParse', parsed) ->
-                                                   runParser (function parsed) toParse'
-                                               Nothing -> Nothing
+    parser >>= getNewParser = Parser $ \toParse->
+        case runParser parser toParse of
+          Just (toParse', parsed) ->
+              runParser (getNewParser parsed) toParse'
+          Nothing -> Nothing
 
 predicateParser :: (Char -> Bool) -> Parser Char
-predicateParser predicate = Parser $ \chars -> case chars of
-                                                 (x:xs) -> if predicate x
-                                                              then Just (xs, x)
-                                                              else Nothing
-                                                 []     -> Nothing
+predicateParser predicate = Parser $
+    \chars -> case chars of
+                (x:xs) -> if predicate x
+                             then Just (xs, x)
+                             else Nothing
+                []     -> Nothing
+
+-- I don't think this is ever needed (maybe)
+parseIfParser :: Parser a -> (a -> Bool) -> Parser a
+parseIfParser parser predicate = Parser $ \input -> do
+    (rest, parsed) <- runParser parser input
+    if predicate parsed
+       then pure (rest, parsed)
+       else Nothing
+
+inBetweenParser :: Parser a -> Parser b -> Parser c -> Parser a
+inBetweenParser betweenParser openParser closeParser =
+    openParser *> betweenParser <* closeParser
+
+surroundParser :: Parser a -> Parser b -> Parser a
+surroundParser surroundedParser surrounderParser =
+    inBetweenParser surroundedParser surrounderParser surrounderParser
 
 charParser :: Char -> Parser Char
 charParser c =  predicateParser (==c)
 
+anyCharParser :: Parser Char
+anyCharParser =  predicateParser (const True)
+
 takeWhileParser :: (Char -> Bool) -> Parser String
 takeWhileParser = many . predicateParser
+
+whitespaceParser :: Parser String
+whitespaceParser = takeWhileParser isSpace
 
 stringParser :: String -> Parser String
 stringParser = traverse charParser
 
+seperatedByParser :: Parser a -> Parser b -> Parser [a]
+seperatedByParser parser delimiter = do
+    maybeElement <- optional parser
+    maybeDelimited <- optional delimiter
+    case (maybeElement, maybeDelimited) of
+      (Just element, Just _) -> do
+          elements <- seperatedByParser parser delimiter
+          pure (element:elements)
+      (Just element, Nothing)   -> pure [element]
+      _ -> empty
+
+jNullParser :: Parser JValue
+jNullParser = JNull <$ stringParser "null"
+
 jBoolParser :: Parser JValue
 jBoolParser = JBool True <$ stringParser "true" <|> JBool False <$ stringParser "false"
 
+{-
 -- This will throw an exception. Not wanted
-{- jNumParser :: Parser JValue
+jNumParser :: Parser JValue
 jNumParser = readJNum <$> parseValidNumChars
     where isValidNumChar = flip elem (['0'..'9'] ++ ['-', 'e', '.'])
           parseValidNumChars = takeWhileParser isValidNumChar
-          readJNum num = JNumber $ read num -}
+          readJNum num = JNumber $ read num
+-- I want to find a way to compose parsers to parser numbers but IDK how to combine
+-- parser results unless I use do notation
+jNumParser = JNumber . read <$> validNumParser
+    where validNumParser = optional (charParser '-')
+            *> some (predicateParser isDigit)
+            <* optional (charParser 'e' <|> charParser 'E')
+            <* some (predicateParser isDigit)
+-}
 
 -- This way seems wrong (probably is lol)
 jNumParser :: Parser JValue
@@ -123,12 +172,45 @@ jNumParser = Parser $ \input -> do
         Just number -> pure (rest, JNumber number)
         _           -> Nothing
 
+-- Only supports escaped sequences of one character length (No unicode yet)
 jStringParser :: Parser JValue
-jStringParser = JString <$> (charParser '"' *> takeWhileParser (/= '"') <* charParser '"')
+jStringParser = JString <$> surroundParser (many jCharacter) (charParser '"')
+    where jCharacter = (charParser '\\' *> anyCharParser) <|> predicateParser (/='"')
 
-trimWhitespace :: String -> String
-trimWhitespace = f . f
-    where f = reverse . dropWhile isSpace
+jValueParser :: Parser JValue
+jValueParser = jNullParser <|> jBoolParser <|> jNumParser <|> jStringParser <|> jArrayParser <|> jObjectParser
 
-parseJSON :: String -> JValue
-parseJSON = undefined
+jArrayParser :: Parser JValue
+jArrayParser = JArray <$>
+    inBetweenParser (elementsParser <|> ([] <$ whitespaceParser)) (charParser '[') (charParser ']')
+        where elementsParser = seperatedByParser
+                               (whitespaceParser *> jValueParser <* whitespaceParser)
+                               (charParser ',')
+
+jObjectParser :: Parser JValue
+jObjectParser = JObject <$>
+    inBetweenParser (elementsParser <|> ([] <$ whitespaceParser)) (charParser '{') (charParser '}')
+        where elementParser = do
+                  let jCharacter = (charParser '\\' *> anyCharParser) <|> predicateParser (/='"')
+                  key <- surroundParser (many jCharacter) (charParser '"')
+                  _ <- whitespaceParser *> charParser ':' <* whitespaceParser
+                  value <- jValueParser
+                  pure (key, value)
+              elementsParser = seperatedByParser 
+                               (whitespaceParser *> elementParser <* whitespaceParser)
+                               (charParser ',')
+
+parseJSON :: String -> Maybe (String, JValue)
+parseJSON = runParser jValueParser
+
+parseJSON' :: String -> IO (Maybe (String, JValue))
+parseJSON' path = do
+    handle <- openFile path ReadMode
+    jsonString <- hGetContents handle
+    pure $ parseJSON jsonString
+
+main :: IO ()
+main = do
+    parsedValue <- parseJSON' "testJSON.json"
+    print parsedValue
+    pure ()
