@@ -1,13 +1,8 @@
+import Control.Applicative (optional, Alternative((<|>), empty, many))
 import Data.Char (isSpace, toLower, digitToInt, isDigit)
+import Data.Bifunctor (Bifunctor(second))
 import Data.List (intercalate)
-import Control.Applicative
-import Data.Bifunctor
-import Control.Monad
-import Data.Functor
-import Data.Maybe
-import Data.Tuple
-import System.IO
-import Text.Read
+import Text.Read (readMaybe)
 
 {-
    This is an attempt to make a JSON Parser. I thought this would
@@ -15,9 +10,10 @@ import Text.Read
    need to understand a lot more about Haskell to parse JSON in
    an effective manner.
 
-   I have learned a lot so far and still haven't finished lol.
    From Functors to Monads, this has been a really enlightening
-   experience.
+   experience. It took a heck of a long time to wrap my head around
+   a lot of the stuff (Category Theory XD) and I still haven't gotten
+   a complete understanding, but this has really been fun.
 
    Tutorials I have used so far:
    - https://github.com/tsoding/haskell-json
@@ -53,21 +49,25 @@ data JValue = JObject [(String, JValue)]
 instance Show JValue where
     show jVal = case jVal of
         JObject objects     -> showObjects objects
-        JArray jValues      -> surroundBracket . intercalate ", " $ map show jValues
+        JArray jValues      -> showElements jValues
         JString string      -> surroundQuote string
         JNumber number      -> show number
         JBool bool          -> map toLower . show $ bool
         JNull               -> "null"
-        where showObjects   = surroundBrace
+        where showObjects = surroundBrace
                                 . intercalate ", "
                                 . map (\(key, jValue) ->
-                                       surroundQuote key ++ ": " ++ show jValue)
+                                       surroundQuote key ++ ": "
+                                       ++ show jValue)
+              showElements = surroundBracket
+                                . intercalate ", "
+                                . map show
 
 -- |A parser for some type `a`
 newtype Parser a = Parser { runParser :: String  -> Maybe (String, a) }
 
 instance Functor Parser where
-    -- We need to get past the Maybe type then map the function onto the parsed value
+    -- fmap past the Maybe and then map the function onto the parsed value
     fmap function parser = Parser $ fmap (second function) . runParser parser
 
 instance Applicative Parser where
@@ -103,8 +103,8 @@ inBetweenParser :: Parser a -> Parser b -> Parser c -> Parser a
 inBetweenParser betweenParser openParser closeParser =
     openParser *> betweenParser <* closeParser
 
-surroundParser :: Parser a -> Parser b -> Parser a
-surroundParser surroundedParser surrounderParser =
+surroundedByParser :: Parser b -> Parser a -> Parser a
+surroundedByParser surrounderParser surroundedParser =
     inBetweenParser surroundedParser surrounderParser surrounderParser
 
 charParser :: Char -> Parser Char
@@ -118,6 +118,9 @@ takeWhileParser = many . predicateParser
 
 whitespaceParser :: Parser String
 whitespaceParser = takeWhileParser isSpace
+
+inWhitespaceParser :: Parser a -> Parser a
+inWhitespaceParser = surroundedByParser whitespaceParser
 
 stringParser :: String -> Parser String
 stringParser = traverse charParser
@@ -141,7 +144,8 @@ jNullParser :: Parser JValue
 jNullParser = JNull <$ stringParser "null"
 
 jBoolParser :: Parser JValue
-jBoolParser = JBool True <$ stringParser "true" <|> JBool False <$ stringParser "false"
+jBoolParser = JBool True <$ stringParser "true"
+          <|> JBool False <$ stringParser "false"
 
 {-
 -- This will throw an exception. Not wanted
@@ -150,8 +154,8 @@ jNumParser = readJNum <$> parseValidNumChars
     where isValidNumChar = flip elem (['0'..'9'] ++ ['-', 'e', '.'])
           parseValidNumChars = takeWhileParser isValidNumChar
           readJNum num = JNumber $ read num
--- I want to find a way to compose parsers to parser numbers but IDK how to combine
--- parser results unless I use do notation
+-- I want to find a way to compose parsers to parser numbers but
+-- IDK how to combine parser results unless I use do notation
 jNumParser = JNumber . read <$> validNumParser
     where validNumParser = optional (charParser '-')
             *> some (predicateParser isDigit)
@@ -169,29 +173,33 @@ jNumParser = Parser $ \input -> do
         _           -> Nothing
 
 jStringParser :: Parser JValue
-jStringParser = JString <$> surroundParser (many jCharParser) (charParser '"')
+jStringParser = JString <$> surroundedByParser
+                            (charParser '"') (many jCharParser)
 
 jArrayParser :: Parser JValue
-jArrayParser = JArray <$>
-    inBetweenParser (elementsParser <|> ([] <$ whitespaceParser)) (charParser '[') (charParser ']')
+jArrayParser = JArray <$> inBetweenParser
+    (elementsParser <|> ([] <$ whitespaceParser))
+    (charParser '[') (charParser ']')
         where elementsParser = separatedByParser
-                               (whitespaceParser *> jValueParser <* whitespaceParser)
+                               (inWhitespaceParser jValueParser)
                                (charParser ',')
 
 jObjectParser :: Parser JValue
-jObjectParser = JObject <$>
-    inBetweenParser (elementsParser <|> ([] <$ whitespaceParser)) (charParser '{') (charParser '}')
-        where elementParser = do
-                  key <- surroundParser (many jCharParser) (charParser '"')
-                  _ <- whitespaceParser *> charParser ':' <* whitespaceParser
+jObjectParser = JObject <$> inBetweenParser
+    (objectsParser <|> ([] <$ whitespaceParser))
+    (charParser '{') (charParser '}')
+        where objectParser = do
+                  key <- surroundedByParser (charParser '"') (many jCharParser)
+                  _ <- inWhitespaceParser (charParser ':')
                   value <- jValueParser
                   pure (key, value)
-              elementsParser = separatedByParser
-                               (whitespaceParser *> elementParser <* whitespaceParser)
-                               (charParser ',')
+              objectsParser = separatedByParser
+                  (inWhitespaceParser objectParser)
+                  (charParser ',')
 
 jValueParser :: Parser JValue
-jValueParser = jNullParser <|> jBoolParser <|> jNumParser <|> jStringParser <|> jArrayParser <|> jObjectParser
+jValueParser = jNullParser <|> jBoolParser <|> jNumParser <|> jStringParser
+    <|> jArrayParser <|> jObjectParser
 
 parseJSON :: String -> Maybe (String, JValue)
 parseJSON = runParser jValueParser
