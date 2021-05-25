@@ -122,13 +122,13 @@ whitespaceParser = takeWhileParser isSpace
 stringParser :: String -> Parser String
 stringParser = traverse charParser
 
-seperatedByParser :: Parser a -> Parser b -> Parser [a]
-seperatedByParser parser delimiter = do
+separatedByParser :: Parser a -> Parser b -> Parser [a]
+separatedByParser parser delimiter = do
     maybeElement <- optional parser
     maybeDelimited <- optional delimiter
     case (maybeElement, maybeDelimited) of
       (Just element, Just _) -> do
-          elements <- seperatedByParser parser delimiter
+          elements <- separatedByParser parser delimiter
           pure (element:elements)
       (Just element, Nothing)   -> pure [element]
       _ -> empty
@@ -174,7 +174,7 @@ jStringParser = JString <$> surroundParser (many jCharParser) (charParser '"')
 jArrayParser :: Parser JValue
 jArrayParser = JArray <$>
     inBetweenParser (elementsParser <|> ([] <$ whitespaceParser)) (charParser '[') (charParser ']')
-        where elementsParser = seperatedByParser
+        where elementsParser = separatedByParser
                                (whitespaceParser *> jValueParser <* whitespaceParser)
                                (charParser ',')
 
@@ -186,7 +186,7 @@ jObjectParser = JObject <$>
                   _ <- whitespaceParser *> charParser ':' <* whitespaceParser
                   value <- jValueParser
                   pure (key, value)
-              elementsParser = seperatedByParser 
+              elementsParser = separatedByParser
                                (whitespaceParser *> elementParser <* whitespaceParser)
                                (charParser ',')
 
