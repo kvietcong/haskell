@@ -113,8 +113,13 @@ isPrime x = null $ [y |
     y <- 2:[3,5..(round . sqrt . fromIntegral) x + 1],
     x `mod` y == 0]
 
+primes' :: [Int]
+primes' = 2:[x | x <- [3,5..], isPrime x]
+
+-- Finding primes using the Sieve of Eratosthenes
 primes :: [Int]
-primes = 2:[x | x <- [3,5..], isPrime x]
+primes = sieve $ 2:[3,5..]
+    where sieve (x:xs) = x : sieve [y | y <- xs, y `rem` x /= 0]
 
 problem7 :: Int
 problem7 = primes !! 10000
