@@ -15,7 +15,7 @@ import Text.Read (readMaybe)
    a lot of the stuff (Category Theory XD) and I still haven't gotten
    a complete understanding, but this has really been fun.
 
-   Tutorials I have used so far:
+   Tutorials I used:
    - https://github.com/tsoding/haskell-json
    - https://wiki.haskell.org/Typeclassopedia
    - https://youtube.com/playlist?list=PLfzJKXh_D71QzOEhX0eWm7XChn_C5Rrxo
@@ -146,22 +146,6 @@ jNullParser = JNull <$ stringParser "null"
 jBoolParser :: Parser JValue
 jBoolParser = JBool True <$ stringParser "true"
           <|> JBool False <$ stringParser "false"
-
-{-
--- This will throw an exception. Not wanted
-jNumParser :: Parser JValue
-jNumParser = readJNum <$> parseValidNumChars
-    where isValidNumChar = flip elem (['0'..'9'] ++ ['-', 'e', '.'])
-          parseValidNumChars = takeWhileParser isValidNumChar
-          readJNum num = JNumber $ read num
--- I want to find a way to compose parsers to parser numbers but
--- IDK how to combine parser results unless I use do notation
-jNumParser = JNumber . read <$> validNumParser
-    where validNumParser = optional (charParser '-')
-            *> some (predicateParser isDigit)
-            <* optional (charParser 'e' <|> charParser 'E')
-            <* some (predicateParser isDigit)
--}
 
 -- This way seems wrong (probably is lol)
 jNumParser :: Parser JValue
