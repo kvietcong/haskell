@@ -19,12 +19,12 @@ instance Show Element where
       | element == Earth = "E"
       | otherwise = "?"
 
-data Cell = Alive | Dead deriving Eq
+data Cell = Alive | Dead deriving (Eq, Enum)
 
 instance Show Cell where
     show cell 
       | cell == Alive = "O"
-      | cell == Dead  = "."
+      | cell == Dead  = "·"
 
 data Zipper a = Zipper [a] a [a] deriving Eq
 
@@ -120,30 +120,20 @@ goLeft (Zipper2D zipper2D) = Zipper2D $ fmap shiftLeft zipper2D
 goRight :: Zipper2D a -> Zipper2D a
 goRight (Zipper2D zipper2D) = Zipper2D $ fmap shiftRight zipper2D
 
--- Fix this so that you don't need Eq constraint
-getNeighbors :: Eq a => Zipper2D a -> [a]
-getNeighbors zipper2D = extract <$> filter (/= zipper2D) direct
-                                 ++ filter (`notElem` [goUp zipper2D
-                                                      , goDown zipper2D
-                                                      , goLeft zipper2D
-                                                      , goRight zipper2D]) diagonals
-  where direct = [ goUp zipper2D
-                 , goLeft zipper2D
-                 , goRight zipper2D
-                 , goDown zipper2D]
-        diagonals = [ goUp . goLeft $ zipper2D
-                    , goUp . goRight $ zipper2D
-                    , goDown . goLeft $ zipper2D
-                    , goDown . goRight $ zipper2D]
-
-balancedZip :: Zipper Int
-balancedZip = Zipper [-1,-2..(-5)] 0 [1..5]
-
-leftHeavyZip :: Zipper Int
-leftHeavyZip = Zipper [4,3..(-5)] 5 []
-
-rightHeavyZip :: Zipper Int
-rightHeavyZip = Zipper [] (-5) [-4..5]
+getNeighbors :: Zipper2D a -> [a]
+getNeighbors zipper2D@(Zipper2D (Zipper up (Zipper left _ right) down)) = extract <$> neighbors
+  where canGoLeft = not . null $ left
+        canGoRight = not . null $ right
+        canGoUp = not . null $ up
+        canGoDown = not . null $ down
+        neighbors = [goLeft zipper2D | canGoLeft]
+                 ++ [goLeft . goUp $ zipper2D | canGoLeft && canGoUp]
+                 ++ [goLeft . goDown $ zipper2D | canGoLeft && canGoDown]
+                 ++ [goRight zipper2D | canGoRight]
+                 ++ [goRight . goUp $ zipper2D | canGoRight && canGoUp]
+                 ++ [goRight . goDown $ zipper2D | canGoRight && canGoDown]
+                 ++ [goUp zipper2D | canGoUp]
+                 ++ [goDown zipper2D | canGoDown]
 
 exampleInts :: Zipper2D Int
 exampleInts = Zipper2D (Zipper
@@ -154,23 +144,25 @@ exampleInts = Zipper2D (Zipper
                          Zipper [1,1] 2 [1,1]]
                        )
 
-exampleCells :: Zipper2D Cell
-exampleCells = Zipper2D (Zipper
-                         [Zipper [Alive,Dead] Alive [Alive,Alive],
-                          Zipper [Dead,Dead] Dead [Dead,Alive]]
-                         (Zipper [Alive,Dead] Dead [Alive,Dead])
-                         [Zipper [Dead,Alive] Dead [Alive,Dead],
-                          Zipper [Alive,Alive] Dead [Alive,Alive]]
-                        )
+exampleCells' :: Zipper2D Cell
+exampleCells' = Zipper2D (Zipper
+                          [Zipper [Dead,Dead] Alive [Dead,Dead],
+                           Zipper [Dead,Dead] Dead [Dead,Dead]]
+                          (Zipper [Dead,Dead] Alive [Dead,Dead])
+                          [Zipper [Dead,Dead] Alive [Dead,Dead],
+                           Zipper [Dead,Dead] Dead [Dead,Dead]]
+                         )
 
-stableCells :: Zipper2D Cell
-stableCells = Zipper2D (Zipper
-                        [Zipper [Dead,Dead] Alive [Dead,Dead],
-                         Zipper [Dead,Dead] Dead [Dead,Dead]]
-                        (Zipper [Dead,Dead] Alive [Dead,Dead])
-                        [Zipper [Dead,Dead] Alive [Dead,Dead],
-                         Zipper [Dead,Dead] Dead [Dead,Dead]]
-                       )
+infiCellAlt :: [Cell]
+infiCellAlt = [Alive,Dead] ++ infiCellAlt
+
+infiDeadRows :: [Zipper Cell]
+infiDeadRows = repeat $ Zipper (repeat Dead) Dead (repeat Dead)
+
+exampleCells :: Zipper2D Cell
+exampleCells = Zipper2D (Zipper rows (head rows) rows)
+    where cells = take 25 infiCellAlt
+          rows = replicate 15 $ Zipper cells Alive cells
 
 exampleElements :: Zipper2D Element
 exampleElements = Zipper2D (Zipper
@@ -235,25 +227,19 @@ gameOfLife = iterate (extend gameOfLifeRules)
 microSecondsInSecond :: Int
 microSecondsInSecond = 1000000
 
-delay :: Int
-delay = microSecondsInSecond `div` 2
+customAnimate :: Display a => Int -> [a] -> (a -> String) -> IO ()
+customAnimate delay states displayFunction = do
+    mapM_
+        (\state -> do
+            putStrLn $ displayFunction state
+            threadDelay delay
+            system "cls"
+        ) states
+
+animate :: Display a => Int -> [a] -> IO ()
+animate delay states = customAnimate delay states display
 
 main :: IO ()
 main = do
     system "cls"
-    mapM_ (\item -> do
-                putStrLn $ display item
-                threadDelay delay
-                system "cls"
-          )
-          (take 3 $ elementalCraft exampleElements)
-
-    system "cls"
-    mapM_ (\item -> do
-                putStrLn $ display item
-                threadDelay delay
-                system "cls"
-          )
-          (gameOfLife stableCells)
-
-    print "Done"
+    animate (microSecondsInSecond `div` 3) (gameOfLife exampleCells)
