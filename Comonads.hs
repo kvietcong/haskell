@@ -80,9 +80,20 @@ instance Show a => Show (Zipper2D a) where
 
 instance Comonad Zipper2D where
     extract (Zipper2D zipper2D) = extract . extract $ zipper2D
-    -- Okay, I still am confused as to how this totally worked. I just made the
-    -- types line up and it works LOL
-    duplicate (Zipper2D zipper2D) = Zipper2D <$> (Zipper2D . dupe . dupe) zipper2D
+    -- My Interpretation of duplicate:
+    -- First, you get the original nested zipper and apply dupe.
+    -- This will nest the zipper2D in one more layer of Zipper.
+    -- Dupe has the same concept as duplicate for Zipper but instead
+    -- of shifting right or left on the outer layer, we know
+    -- that zipper2D will need to be shifted one layer deeper.
+    -- (This can be seen with the checks and the fmaps)
+    -- Then you need to apply dupe again put another Zipper Layer
+    -- on. Now you end up with a 4 Zipper layer monster. We
+    -- can now use the Zipper2D constructor to get rid of
+    -- the outer two Zipper layers. Finally using fmap, we
+    -- can convert the last 2 Zipper layers into another
+    -- Zipper2D and make a double layer Zipper2D
+    duplicate (Zipper2D zipper2D) = Zipper2D <$> Zipper2D ((dupe . dupe) zipper2D)
         where dupe zipper = Zipper (lefts zipper) zipper (rights zipper)
               lefts zipper = convergeLeft zipper []
               rights zipper = convergeRight zipper []
@@ -125,9 +136,6 @@ getNeighbors zipper2D = extract <$> filter (/= zipper2D) direct
                     , goDown . goLeft $ zipper2D
                     , goDown . goRight $ zipper2D]
 
-sumOfNeighbors' :: Num a => Zipper a -> a
-sumOfNeighbors' (Zipper (l:_) _ (r:_)) = l + r
-
 balancedZip :: Zipper Int
 balancedZip = Zipper [-1,-2..(-5)] 0 [1..5]
 
@@ -137,53 +145,41 @@ leftHeavyZip = Zipper [4,3..(-5)] 5 []
 rightHeavyZip :: Zipper Int
 rightHeavyZip = Zipper [] (-5) [-4..5]
 
-testInts :: Zipper2D Int
-testInts = Zipper2D (Zipper
-                     [Zipper [2,1] 6 [2,1],
-                      Zipper [1,1] 2 [1,1]]
-                     (Zipper [6,2] 0 [6,2])
-                     [Zipper [2,1] 6 [2,1],
-                      Zipper [1,1] 2 [1,1]]
-                    )
+exampleInts :: Zipper2D Int
+exampleInts = Zipper2D (Zipper
+                        [Zipper [2,1] 6 [2,1],
+                         Zipper [1,1] 2 [1,1]]
+                        (Zipper [6,2] 0 [6,2])
+                        [Zipper [2,1] 6 [2,1],
+                         Zipper [1,1] 2 [1,1]]
+                       )
 
-testCells :: Zipper2D Cell
-testCells = Zipper2D (Zipper
-                     [Zipper [Alive,Dead] Alive [Alive,Alive],
-                      Zipper [Dead,Dead] Dead [Dead,Alive]]
-                     (Zipper [Alive,Dead] Dead [Alive,Dead])
-                     [Zipper [Dead,Alive] Dead [Alive,Dead],
-                      Zipper [Alive,Alive] Dead [Alive,Alive]]
-                    )
-
-testElements :: Zipper2D Element
-testElements = Zipper2D (Zipper
-                         [Zipper [Water,Air]   Fire    [Water,Air],
-                          Zipper [Air,Air]     Air     [Air,Air]]
-                         (Zipper [Water,Air]   Earth   [Water,Air])
-                         [Zipper [Water,Air]   Fire    [Water,Air],
-                          Zipper [Air,Air]     Air     [Air,Air]]
+exampleCells :: Zipper2D Cell
+exampleCells = Zipper2D (Zipper
+                         [Zipper [Alive,Dead] Alive [Alive,Alive],
+                          Zipper [Dead,Dead] Dead [Dead,Alive]]
+                         (Zipper [Alive,Dead] Dead [Alive,Dead])
+                         [Zipper [Dead,Alive] Dead [Alive,Dead],
+                          Zipper [Alive,Alive] Dead [Alive,Alive]]
                         )
 
-elementalRule :: Zipper2D Element -> Element
-elementalRule zipper2D = case extract zipper2D of
-                           Air -> air neighbors
-                           Fire -> fire neighbors
-                           Earth -> earth neighbors
-                           Water -> water neighbors
-    where neighbors = getNeighbors zipper2D
-          getElementAmount element = length . filter (==element)
-          air neighbors = if getElementAmount Fire neighbors > 3
-                             then Water
-                             else Air
-          fire neighbors = if getElementAmount Water neighbors > 2
-                              then Water
-                              else Fire
-          earth neighbors = if getElementAmount Water neighbors > 4
-                              then Water
-                              else Earth
-          water neighbors = if getElementAmount Fire neighbors > 4
-                               then Air
-                               else Water
+stableCells :: Zipper2D Cell
+stableCells = Zipper2D (Zipper
+                        [Zipper [Dead,Dead] Alive [Dead,Dead],
+                         Zipper [Dead,Dead] Dead [Dead,Dead]]
+                        (Zipper [Dead,Dead] Alive [Dead,Dead])
+                        [Zipper [Dead,Dead] Alive [Dead,Dead],
+                         Zipper [Dead,Dead] Dead [Dead,Dead]]
+                       )
+
+exampleElements :: Zipper2D Element
+exampleElements = Zipper2D (Zipper
+                            [Zipper [Water,Air]   Fire    [Water,Air],
+                             Zipper [Air,Air]     Air     [Air,Air]]
+                            (Zipper [Water,Air]   Earth   [Water,Air])
+                            [Zipper [Water,Air]   Fire    [Water,Air],
+                             Zipper [Air,Air]     Air     [Air,Air]]
+                           )
 
 class Display a where
     display :: a -> String
@@ -200,23 +196,64 @@ instance Show a => Display (Zipper2D a) where
             display midZip,
             intercalate "\n" (map display downZips)]
 
-elementalCraft :: Zipper2D Element -> [Zipper2D Element]
-elementalCraft = iterate (extend elementalRule)
+elementalRules :: Zipper2D Element -> Element
+elementalRules elements = case extract elements of
+                            Air -> air neighbors
+                            Fire -> fire neighbors
+                            Earth -> earth neighbors
+                            Water -> water neighbors
+    where neighbors = getNeighbors elements
+          getElementAmount element = length . filter (==element)
+          air neighbors = if getElementAmount Fire neighbors > 2
+                             then Water
+                             else Air
+          fire neighbors = if getElementAmount Water neighbors > 2
+                              then Water
+                              else Fire
+          earth neighbors = if getElementAmount Water neighbors > 4
+                              then Water
+                              else Earth
+          water neighbors = if getElementAmount Fire neighbors > 4
+                               then Air
+                               else Water
 
-displayItem :: Display a => Int -> a -> IO ()
-displayItem delay item = do
-    threadDelay delay
-    system "cls"
-    putStrLn $ display item
+elementalCraft :: Zipper2D Element -> [Zipper2D Element]
+elementalCraft = iterate (extend elementalRules)
+
+gameOfLifeRules :: Zipper2D Cell -> Cell
+gameOfLifeRules cells = case cell of
+                          Dead -> if alive == 3 then Alive else Dead
+                          Alive -> if alive `elem` [2,3] then Alive else Dead
+    where cell = extract cells
+          neighbors = getNeighbors cells
+          alive = length . filter (==Alive) $ neighbors
+          dead = length . filter (==Dead) $ neighbors
+
+gameOfLife :: Zipper2D Cell -> [Zipper2D Cell]
+gameOfLife = iterate (extend gameOfLifeRules)
 
 microSecondsInSecond :: Int
 microSecondsInSecond = 1000000
 
-printDelay :: Int
-printDelay = microSecondsInSecond
+delay :: Int
+delay = microSecondsInSecond `div` 2
 
 main :: IO ()
 main = do
     system "cls"
-    mapM_ (displayItem printDelay) (take 10 $ elementalCraft testElements)
+    mapM_ (\item -> do
+                putStrLn $ display item
+                threadDelay delay
+                system "cls"
+          )
+          (take 3 $ elementalCraft exampleElements)
+
+    system "cls"
+    mapM_ (\item -> do
+                putStrLn $ display item
+                threadDelay delay
+                system "cls"
+          )
+          (gameOfLife stableCells)
+
     print "Done"
