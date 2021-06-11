@@ -115,10 +115,10 @@ goDown :: Zipper2D a -> Zipper2D a
 goDown (Zipper2D zipper2D) = Zipper2D $ shiftRight zipper2D
 
 goLeft :: Zipper2D a -> Zipper2D a
-goLeft (Zipper2D zipper2D) = Zipper2D $ fmap shiftLeft zipper2D
+goLeft (Zipper2D zipper2D) = Zipper2D $ shiftLeft <$> zipper2D
 
 goRight :: Zipper2D a -> Zipper2D a
-goRight (Zipper2D zipper2D) = Zipper2D $ fmap shiftRight zipper2D
+goRight (Zipper2D zipper2D) = Zipper2D $ shiftRight <$> zipper2D
 
 getNeighbors :: Zipper2D a -> [a]
 getNeighbors zipper2D@(Zipper2D (Zipper up (Zipper left _ right) down)) = extract <$> neighbors
@@ -161,8 +161,8 @@ infiDeadRows = repeat $ Zipper (repeat Dead) Dead (repeat Dead)
 
 exampleCells :: Zipper2D Cell
 exampleCells = Zipper2D (Zipper rows (head rows) rows)
-    where cells = take 25 infiCellAlt
-          rows = replicate 15 $ Zipper cells Alive cells
+    where cells = take 36 infiCellAlt
+          rows = replicate 12 $ Zipper cells Alive cells
 
 exampleElements :: Zipper2D Element
 exampleElements = Zipper2D (Zipper
