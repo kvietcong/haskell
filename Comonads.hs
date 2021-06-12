@@ -1,4 +1,10 @@
--- A lot of help from: https://stackoverflow.com/questions/42905514/nested-list-haskell-iteration
+{- 
+    Resources I used to learn
+    - https://www.youtube.com/watch?v=6eiS2QTQKPE
+    - https://eli-jordan.github.io/2018/02/16/life-is-a-comonad/
+    - https://stackoverflow.com/questions/42905514/nested-list-haskell-iteration
+    - 
+-}
 import Control.Monad
 import Control.Comonad
 import Data.List (intercalate)
