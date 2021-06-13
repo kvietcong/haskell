@@ -1,6 +1,6 @@
 import Control.Applicative (optional, Alternative((<|>), empty, many))
-import Data.Char (isSpace, toLower, digitToInt, isDigit)
 import Data.Bifunctor (Bifunctor(second))
+import Data.Char (isSpace, toLower)
 import Data.List (intercalate)
 import Text.Read (readMaybe)
 
@@ -193,6 +193,6 @@ parseJSONFile path = parseJSON <$> readFile path
 
 main :: IO ()
 main = do
-    parsedValue <- parseJSONFile "testJSON.json"
+    parsedValue <- parseJSONFile "./src/testJSON.json"
     print parsedValue
     pure ()

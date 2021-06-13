@@ -81,3 +81,6 @@ gridsFromChoices = mapM sequence
 
 solveSudoku :: Grid Int -> [Grid Int]
 solveSudoku grid = undefined
+
+main :: IO ()
+main = undefined

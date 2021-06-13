@@ -397,3 +397,6 @@ digitSum x = sum [read [y] | y <- show x]
 
 problem16 :: Int
 problem16 = digitSum $ 2^1000
+
+main :: IO ()
+main = print $ take 50 primes
