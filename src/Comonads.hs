@@ -55,20 +55,9 @@ shiftLeft zipper@(Zipper [] _ _) = zipper
 
 instance Comonad Zipper where
     extract (Zipper _ mid _) = mid
-    duplicate zipper = Zipper lefts zipper rights
-        where lefts = convergeLeft zipper []
-              rights = convergeRight zipper []
-              convergeLeft zipper@(Zipper left _ _) accumulated =
-                  if null left
-                     then accumulated
-                     else newZip:convergeLeft newZip accumulated
-                  where newZip = shiftLeft zipper
-              convergeRight zipper@(Zipper _ _ right) accumulated =
-                  if null right
-                     then accumulated
-                     else newZip:convergeRight newZip accumulated
-                  where newZip = shiftRight zipper
-    extend function = fmap function . duplicate
+    duplicate zipper@(Zipper left _ right) = Zipper lefts zipper rights
+        where lefts = tail $ scanl (\z _ -> shiftLeft z) zipper left
+              rights = tail $ scanl (\z _ -> shiftRight z) zipper right
 
 newtype Zipper2D a = Zipper2D (Zipper (Zipper a)) deriving Eq
 
@@ -101,18 +90,10 @@ instance Comonad Zipper2D where
     -- Zipper2D and make a double layer Zipper2D
     duplicate (Zipper2D zipper2D) = Zipper2D <$> Zipper2D ((dupe . dupe) zipper2D)
         where dupe zipper = Zipper (lefts zipper) zipper (rights zipper)
-              lefts zipper = convergeLeft zipper []
-              rights zipper = convergeRight zipper []
-              convergeLeft zipper@(Zipper _ (Zipper innerLefts _ _) _) accumulated =
-                  if null innerLefts
-                     then accumulated
-                     else newZip:convergeLeft newZip accumulated
-                  where newZip = shiftLeft <$> zipper
-              convergeRight zipper@(Zipper _ (Zipper _ _ innerRights) _) accumulated =
-                  if null innerRights
-                     then accumulated
-                     else newZip:convergeRight newZip accumulated
-                  where newZip = shiftRight <$> zipper
+              lefts zipper@(Zipper _ (Zipper left _ _) _) =
+                  tail $ scanl (\z _ -> shiftLeft <$> z) zipper left
+              rights zipper@(Zipper _ (Zipper _ _ right) _) =
+                  tail $ scanl (\z _ -> shiftRight <$> z) zipper right
 
 goUp :: Zipper2D a -> Zipper2D a
 goUp (Zipper2D zipper2D) = Zipper2D $ shiftLeft zipper2D
