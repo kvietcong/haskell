@@ -1,25 +1,18 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 import Reanimate
-import Reanimate.Scene
-import Control.Lens.Operators
 import Codec.Picture (PixelRGBA8(..))
-
--- Honest thoughts about Reanimate:
--- It seems to be a really cool library! I like
--- how Haskell has a way to animate things in such
--- an expressive way. However, for me at this moment,
--- it seems that the user experience isn't that great
--- I'd be happy to revisit it in the future but
--- it is pretty hard to work with rn. This may also
--- have to do with the state of the Haskell ecosystem.
--- It isn't too user friendly so I might just stick
--- to my explorations in category theory rather than
--- trying to do anything user facing with Haskell
 
 equation :: SVG
 equation = scale 3 $ center $
     latexAlign "e^{\\pi i} +  1 = 0"
+
+equationParts :: [SVG]
+equationParts = coloredParts
+    where parts = [snd (splitGlyphs [x] equation) | x <- [0..7]]
+          colors = withFillColorPixel <$>
+              [nord7, nord9, nord11, nord13, nord15, nord8, nord10]
+          coloredParts = [ color part
+                         | (color, part) <- zip colors parts]
 
 background :: SVG
 background = mkBackgroundPixel nord0
@@ -29,32 +22,17 @@ environment = addStatic background
     . mapA (withStrokeWidth 0)
     . mapA (withFillColorPixel nord6)
 
-fadeInOut :: Animation 
-fadeInOut = environment $ scene $ do
-    wait 0.25
-
-    play $ applyE fadeInE $ staticFrame 0.5 equation
-    play $ staticFrame 1 equation
-    play $ applyE fadeOutE $ staticFrame 0.5 equation
-
-    wait 0.1
-
-    play $ mkAnimation 2 $ \t ->
-        partialSvg t $ pathify $ mkCircle (screenHeight / 3)
-    play $ applyE fadeOutE
-         $ staticFrame 0.75 $ mkCircle $ screenHeight / 3
-
-    wait 0.1
-
-    obj <- oNew equation
-    oShowWith obj oDraw
-    oHideWith obj oFadeOut
-    
-    wait 0.25
+fadeInEulerIdenity :: Animation 
+fadeInEulerIdenity = environment
+    $ pauseAtEnd 0.5
+    $ applyE (overEnding 1 fadeOutE)
+        $ pauseAtEnd 2
+        $ setDuration 5
+        $ foldl1 andThen [applyE fadeInE $ staticFrame 1 part
+                         | part <- equationParts]
 
 main :: IO ()
--- main = reanimate $ playThenReverseA fadeInOut
-main = reanimate fadeInOut
+main = reanimate fadeInEulerIdenity
 
 -- Nord Color Palette
 nord0 :: PixelRGBA8
@@ -104,3 +82,21 @@ nord14 = PixelRGBA8 163 190 140 255
 
 nord15 :: PixelRGBA8
 nord15 = PixelRGBA8 180 142 173 255
+
+nordPalette :: [PixelRGBA8]
+nordPalette = [ nord0
+              , nord1
+              , nord2
+              , nord3
+              , nord4
+              , nord5
+              , nord6
+              , nord7
+              , nord8
+              , nord9
+              , nord10
+              , nord11
+              , nord12
+              , nord13
+              , nord14
+              , nord15 ]
