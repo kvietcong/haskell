@@ -20,16 +20,22 @@ background = mkBackgroundPixel nord0
 environment :: Animation -> Animation
 environment = addStatic background
     . mapA (withStrokeWidth 0)
-    . mapA (withFillColorPixel nord6)
 
 fadeInEulerIdenity :: Animation 
 fadeInEulerIdenity = environment
     $ pauseAtEnd 0.5
     $ applyE (overEnding 1 fadeOutE)
         $ pauseAtEnd 2
-        $ setDuration 5
-        $ foldl1 andThen [applyE fadeInE $ staticFrame 1 part
-                         | part <- equationParts]
+        $ seqA
+            ( setDuration 5
+            $ foldl1 andThen [applyE fillInE $ staticFrame 1 part
+                             | part <- equationParts]
+            )
+            ( seqA (foldl1 parA $ staticFrame 1 (head equationParts)
+                                : [applyE fadeOutE $ staticFrame 1 part
+                                  | part <- tail equationParts])
+                   (pauseAtEnd 1 $ applyE (translateE 6 0) $ staticFrame 1.5 $ head equationParts)
+            )
 
 main :: IO ()
 main = reanimate fadeInEulerIdenity
