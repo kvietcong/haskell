@@ -1,6 +1,39 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 import Reanimate
+import Reanimate.Scene
+import Control.Lens.Operators
 import Codec.Picture (PixelRGBA8(..))
+
+-- My Thoughts on Reanimate:
+-- This is a really cool library that I appreciate.
+-- It is trying to bring practicality to the
+-- Haskell ecosystem with something really cool.
+--
+-- However, I am sad to say it is a bit unfriendly
+-- to work with. The library is quite hard to learn
+-- and working with it seems a little janky. I want
+-- to keep on the declarative side, but I feel like
+-- it is underpowered. But when I work with the
+-- imperative side, I question, why not just work
+-- with something easier like Manim? The documentation
+-- is also quite lacking in clearly explained examples.
+--
+-- Also, this might be more on me, there are lenses
+-- all over the imperative side. I have been trying
+-- to learn Haskell for about a month now but having
+-- to also get into lenses seems a bit much. After
+-- Functors, Applicatives, Monads, and other Category
+-- theory things to learn, Lenses on top of that just
+-- makes Haskell seem like a chore to learn. It seems
+-- that Lenses are pretty widespread though so I guess
+-- I will have to pick them up some day :(
+--
+-- I will be glad to revisit this someday though!
+-- I feel like with the Haskell Foundation starting
+-- to make Haskell more accessible, the whole library
+-- ecosystem might start becoming much better to use
+-- as a regular guy
 
 equation :: SVG
 equation = scale 3 $ center $
@@ -21,6 +54,16 @@ environment :: Animation -> Animation
 environment = addStatic background
     . mapA (withStrokeWidth 0)
 
+centerItem :: Duration -> SVG -> Animation
+centerItem time svg = scene $ do
+    let goCenter t = do
+            oCenterX %= \origin -> fromToS origin 0 t
+            oCenterY %= \origin -> fromToS origin 0 t
+
+    item <- oNew svg
+    oShow item
+    oTweenS item time goCenter
+
 fadeInEulerIdenity :: Animation 
 fadeInEulerIdenity = environment
     $ pauseAtEnd 0.5
@@ -29,13 +72,12 @@ fadeInEulerIdenity = environment
         $ seqA
             ( setDuration 5
             $ foldl1 andThen [applyE fillInE $ staticFrame 1 part
-                             | part <- equationParts]
-            )
-            ( seqA (foldl1 parA $ staticFrame 1 (head equationParts)
-                                : [applyE fadeOutE $ staticFrame 1 part
-                                  | part <- tail equationParts])
-                   (pauseAtEnd 1 $ applyE (translateE 6 0) $ staticFrame 1.5 $ head equationParts)
-            )
+                             | part <- equationParts])
+            ( seqA (pauseAtEnd 0.5
+                   $ foldl1 parA $ staticFrame 1 (head equationParts)
+                   : [applyE fadeOutE $ staticFrame 1 part
+                     | part <- tail equationParts])
+                   (centerItem 2 $ head equationParts))
 
 main :: IO ()
 main = reanimate fadeInEulerIdenity
