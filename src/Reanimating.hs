@@ -9,31 +9,33 @@ import Codec.Picture (PixelRGBA8(..))
 -- This is a really cool library that I appreciate.
 -- It is trying to bring practicality to the
 -- Haskell ecosystem with something really cool.
---
+
 -- However, I am sad to say it is a bit unfriendly
 -- to work with. The library is quite hard to learn
--- and working with it seems a little janky. I want
+-- and working with it seems a little weird. I want
 -- to keep on the declarative side, but I feel like
 -- it is underpowered. But when I work with the
 -- imperative side, I question, why not just work
 -- with something easier like Manim? The documentation
 -- is also quite lacking in clearly explained examples.
---
--- Also, this might be more on me, there are lenses
--- all over the imperative side. I have been trying
--- to learn Haskell for about a month now but having
--- to also get into lenses seems a bit much. After
--- Functors, Applicatives, Monads, and other Category
+
+-- Also, there are lenses all over the imperative side.
+-- I have been trying to learn Haskell for about a month
+-- now but having to also get into lenses seems a bit much.
+-- After Functors, Applicatives, Monads, and other Category
 -- theory things to learn, Lenses on top of that just
 -- makes Haskell seem like a chore to learn. It seems
 -- that Lenses are pretty widespread though so I guess
 -- I will have to pick them up some day :(
---
+
 -- I will be glad to revisit this someday though!
 -- I feel like with the Haskell Foundation starting
 -- to make Haskell more accessible, the whole library
--- ecosystem might start becoming much better to use
--- as a regular guy
+-- ecosystem might start becoming much better to use!
+-- Though there is a possibility that the problems
+-- I'm facing have been from the fact that I'm
+-- learning Haskell sub optimally and that I am not
+-- the brightest
 
 equation :: SVG
 equation = scale 3 $ center $

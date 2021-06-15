@@ -5,6 +5,7 @@
     - https://stackoverflow.com/questions/42905514/nested-list-haskell-iteration
     - 
 -}
+
 import Control.Monad
 import Control.Comonad
 import Data.List (intercalate)
