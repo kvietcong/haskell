@@ -1,11 +1,8 @@
-cabal-version:      2.4
 name:               haskell
-version:            0.1.0.0
+version:            0.0.0.1
 synopsis:           Just me messing around in haskell
 
-homepage: https://github.com/kvietcong/haskell
-
--- A URL where users can report bugs.
+homepage:           https://github.com/kvietcong/haskell
 bug-reports:        https://github.com/kvietcong/haskell/issues
 author:             KV Le
 maintainer:         32186663+kvietcong@users.noreply.github.com
