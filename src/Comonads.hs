@@ -3,7 +3,9 @@
     - https://www.youtube.com/watch?v=6eiS2QTQKPE
     - https://eli-jordan.github.io/2018/02/16/life-is-a-comonad/
     - https://stackoverflow.com/questions/42905514/nested-list-haskell-iteration
-    - 
+    
+    NOTE: I have improved the code and put in in its own repo
+    @ https://github.com/kvietcong/comonadic-life
 -}
 
 import Control.Monad
