@@ -70,6 +70,13 @@ guardTesting string char
   | isSpace char = "This is a space"
   | otherwise = "LOL"
 
+doubleUp :: Eq a => [a] -> [a]
+doubleUp [] = []
+doubleUp [x] = [x,x]
+doubleUp (x1:x2:xs)
+    | x1 == x2  = x1:x2:doubleUp xs
+    | otherwise = x1:x1:doubleUp (x2:xs)
+
 main = do
     putStrLn "Hello, what's your name?"
     name <- getLine
