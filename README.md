@@ -42,7 +42,8 @@ and the ecosystem.
     a `map` method rather than having a specific fmap thing. (Also liftA vs liftM or return vs pure)
 - Windows support was also quite lacking. The install was okay but many things simply did
     not work on Windows for me. The most annoying being input. I feel like Windows IO with
-    Haskell is absolutely impossible
+    Haskell is absolutely impossible. I know I could just use WSL or move to Linux (the superior OS XD)
+    but it would have been nice if Windows support wasn't as bad
 - Sadly, at least to me it felt like it, the Haskell ecosystem was the most user friendly. I appreciate
     the vast amount of volunteer work that has gone into making some really great libraries but the
     ecosystem as a whole lacks a lot of clear documentation and good beginner guides. It was quite hard
