@@ -80,6 +80,7 @@ doubleUp (x1:x2:xs)
 main = do
     putStrLn "Hello, what's your name?"
     name <- getLine
+
     if isLame name 
        then putStrLn $ sayLame name
        else putStrLn $ sayHello name

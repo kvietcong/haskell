@@ -8,7 +8,6 @@
     @ https://github.com/kvietcong/comonadic-life
 -}
 
-import Control.Monad
 import Control.Comonad
 import Data.List (intercalate)
 import System.Process (system)
@@ -30,10 +29,9 @@ instance Show Element where
 
 data Cell = Alive | Dead deriving (Eq, Enum)
 
-instance Show Cell where
-    show cell 
-      | cell == Alive = "O"
-      | cell == Dead  = "·"
+instance Show Cell where show cell 
+                            | cell == Alive = "O"
+                            | otherwise = "·"
 
 data Zipper a = Zipper [a] a [a] deriving Eq
 
