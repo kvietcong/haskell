@@ -6,9 +6,12 @@ import Data.Ord (comparing)
 -- Problem 1: Multiples of 3 and 5 --
 -------------------------------------
 problem1 :: Integral a => a -> a
-problem1 x = sum [y |
-    y <- take (fromIntegral x - 1) [1..],
-    y `mod` 3 == 0 || y `mod` 5 == 0]
+problem1 x =
+  sum
+    [ y
+      | y <- take (fromIntegral x - 1) [1 ..],
+        y `mod` 3 == 0 || y `mod` 5 == 0
+    ]
 
 ---------------------------------------
 -- Problem 2: Even Fibonacci Numbers --
@@ -17,10 +20,16 @@ getFib :: Int -> Int
 getFib x
   | x < 0 = error "You can't have negative Fibonacci numbers?"
   | x < 2 = x
-  | otherwise = getFib (x-1) + getFib (x-2)
+  | otherwise = getFib (x -1) + getFib (x -2)
 
 fib :: [Int]
-fib = [getFib x | x <- [0..]]
+fib = [getFib x | x <- [0 ..]]
+
+fibDynamic :: Int -> Int
+fibDynamic 0 = 0
+fibDynamic 1 = 1
+fibDynamic n = fibs !! n
+    where fibs = fibDynamic 0:fibDynamic 1:[fibs !! (x-1) + fibs !! (x-2) | x <- [2..]]
 
 fib4mil :: [Int]
 fib4mil = takeWhile (< 4000000) fib
@@ -33,10 +42,11 @@ problem2 = sum [x | x <- fib4mil, even x]
 -------------------------------------
 primeFactors :: Int -> [Int]
 primeFactors 1 = []
-primeFactors x = let possibleFactors = 2:[3,5..x]
-    in case find (\y -> (x `rem` y) == 0) possibleFactors of
-         Just factor -> factor : primeFactors (x `quot` factor)
-         Nothing -> [x]
+primeFactors x =
+  let possibleFactors = 2 : [3, 5 .. x]
+   in case find (\y -> (x `rem` y) == 0) possibleFactors of
+        Just factor -> factor : primeFactors (x `quot` factor)
+        Nothing -> [x]
 
 problem3 :: Int
 problem3 = last (primeFactors 600851475143)
@@ -54,20 +64,25 @@ isPalindrome' x = let y = show $ fromIntegral x in y == reverse y
 -- https://stackoverflow.com/questions/26315917/decidein-haskell-if-a-number-is-or-not-a-palindrome-without-using-lists/
 reverseIntegral :: Int -> Int
 reverseIntegral = reverseIntegral 0
-    where reverseIntegral result 0 = result
-          reverseIntegral result original =
-              let (quotient, remainder) = original `quotRem` 10
-               in reverseIntegral (10 * result + remainder) quotient
+  where
+    reverseIntegral result 0 = result
+    reverseIntegral result original =
+      let (quotient, remainder) = original `quotRem` 10
+       in reverseIntegral (10 * result + remainder) quotient
 
 -- This is the latest with the cool reversal algo
 isPalindrome :: Int -> Bool
 isPalindrome x = x == reverseIntegral x
 
 problem4 :: Int
-problem4 = maximum [multiplied |
-    x <- [100..999], y <- [100..999],
-    let multiplied = x * y,
-    isPalindrome multiplied]
+problem4 =
+  maximum
+    [ multiplied
+      | x <- [100 .. 999],
+        y <- [100 .. 999],
+        let multiplied = x * y,
+        isPalindrome multiplied
+    ]
 
 ----------------------------------
 -- Problem 5: Smallest Multiple --
@@ -75,14 +90,15 @@ problem4 = maximum [multiplied |
 -- These solutions are pretty slow tbh
 -- #TODO: Find a way to do this better
 smallestMultiple' :: Int -> Int -> Int
-smallestMultiple' x y = head [
-    a | a <- [y,2*y..],
-    all (\b -> a `mod` b == 0) [x..y]]
+smallestMultiple' x y =
+  head
+    [ a | a <- [y, 2 * y ..], all (\b -> a `mod` b == 0) [x .. y]
+    ]
 
 smallestMultiple :: Int -> Int -> Int
-smallestMultiple x y = fromJust $
-    find (\a -> all (\b -> a `rem` b == 0) [x..y]) [y,2*y..]
-
+smallestMultiple x y =
+  fromJust $
+    find (\a -> all (\b -> a `rem` b == 0) [x .. y]) [y, 2 * y ..]
 
 problem5 :: Int
 problem5 = smallestMultiple 1 10
@@ -95,8 +111,10 @@ primeExponents x = [(head y, length y) | y <- group $ primeFactors x]
 -- Problem 6: Sum square difference --
 --------------------------------------
 sumSquareSquareSum :: Int -> Int -> (Int, Int)
-sumSquareSquareSum x y = (sum [z * z | z <- [x..y]],
-    let sum' = sum [x..y] in sum' * sum')
+sumSquareSquareSum x y =
+  ( sum [z * z | z <- [x .. y]],
+    let sum' = sum [x .. y] in sum' * sum'
+  )
 
 difference :: (Int, Int) -> Int
 difference (x, y) = y - x
@@ -109,17 +127,21 @@ problem6 = difference $ sumSquareSquareSum 1 100
 ------------------------------
 isPrime :: Int -> Bool
 isPrime 1 = False
-isPrime x = null $ [y |
-    y <- 2:[3,5..(round . sqrt . fromIntegral) x + 1],
-    x `mod` y == 0]
+isPrime x =
+  null $
+    [ y
+      | y <- 2 : [3, 5 .. (round . sqrt . fromIntegral) x + 1],
+        x `mod` y == 0
+    ]
 
 primes' :: [Int]
-primes' = 2:[x | x <- [3,5..], isPrime x]
+primes' = 2 : [x | x <- [3, 5 ..], isPrime x]
 
 -- Finding primes using the Sieve of Eratosthenes
 primes :: [Int]
-primes = sieve $ 2:[3,5..]
-    where sieve (x:xs) = x : sieve [y | y <- xs, y `rem` x /= 0]
+primes = sieve $ 2 : [3, 5 ..]
+  where
+    sieve (x : xs) = x : sieve [y | y <- xs, y `rem` x /= 0]
 
 problem7 :: Int
 problem7 = primes !! 10000
@@ -129,26 +151,26 @@ problem7 = primes !! 10000
 --------------------------------------------
 thousandDigitNumber :: [Char]
 thousandDigitNumber =
-    "73167176531330624919225119674426574742355349194934\
-    \96983520312774506326239578318016984801869478851843\
-    \85861560789112949495459501737958331952853208805511\
-    \12540698747158523863050715693290963295227443043557\
-    \66896648950445244523161731856403098711121722383113\
-    \62229893423380308135336276614282806444486645238749\
-    \30358907296290491560440772390713810515859307960866\
-    \70172427121883998797908792274921901699720888093776\
-    \65727333001053367881220235421809751254540594752243\
-    \52584907711670556013604839586446706324415722155397\
-    \53697817977846174064955149290862569321978468622482\
-    \83972241375657056057490261407972968652414535100474\
-    \82166370484403199890008895243450658541227588666881\
-    \16427171479924442928230863465674813919123162824586\
-    \17866458359124566529476545682848912883142607690042\
-    \24219022671055626321111109370544217506941658960408\
-    \07198403850962455444362981230987879927244284909188\
-    \84580156166097919133875499200524063689912560717606\
-    \05886116467109405077541002256983155200055935729725\
-    \71636269561882670428252483600823257530420752963450"
+  "73167176531330624919225119674426574742355349194934\
+  \96983520312774506326239578318016984801869478851843\
+  \85861560789112949495459501737958331952853208805511\
+  \12540698747158523863050715693290963295227443043557\
+  \66896648950445244523161731856403098711121722383113\
+  \62229893423380308135336276614282806444486645238749\
+  \30358907296290491560440772390713810515859307960866\
+  \70172427121883998797908792274921901699720888093776\
+  \65727333001053367881220235421809751254540594752243\
+  \52584907711670556013604839586446706324415722155397\
+  \53697817977846174064955149290862569321978468622482\
+  \83972241375657056057490261407972968652414535100474\
+  \82166370484403199890008895243450658541227588666881\
+  \16427171479924442928230863465674813919123162824586\
+  \17866458359124566529476545682848912883142607690042\
+  \24219022671055626321111109370544217506941658960408\
+  \07198403850962455444362981230987879927244284909188\
+  \84580156166097919133875499200524063689912560717606\
+  \05886116467109405077541002256983155200055935729725\
+  \71636269561882670428252483600823257530420752963450"
 
 digitToInt :: Char -> Int
 digitToInt x = fromEnum x - fromEnum '0'
@@ -163,38 +185,47 @@ digitProduct :: Int -> Int
 digitProduct x = product [read [y] | y <- show x]
 
 problem8 :: Int
-problem8 = maximum [digitProduct $ read number |
-    x <- [0..1001-13],
-    let number = slice x (x + 13) thousandDigitNumber]
+problem8 =
+  maximum
+    [ digitProduct $ read number
+      | x <- [0 .. 1001 -13],
+        let number = slice x (x + 13) thousandDigitNumber
+    ]
 
 --------------------------------------------
 -- Problem 9: Special Pythagorean triplet --
 --------------------------------------------
 pythagoreanTriplets :: [(Int, Int, Int)]
-pythagoreanTriplets = [(a, b, c) |
-    c <- [1..], b <- [1..c-1], a <- [1..b-1],
-    a^2 + b^2 == c^2]
+pythagoreanTriplets =
+  [ (a, b, c)
+    | c <- [1 ..],
+      b <- [1 .. c -1],
+      a <- [1 .. b -1],
+      a ^ 2 + b ^ 2 == c ^ 2
+  ]
 
 productTriplet :: (Int, Int, Int) -> Int
 productTriplet (a, b, c) = a * b * c
 
 -- #TODO: Find a way to do this better (Monads)
 problemNine :: Int
-problemNine = productTriplet $ fromJust $
-    find (\(a, b, c) -> a + b + c == 1000) pythagoreanTriplets
+problemNine =
+  productTriplet $
+    fromJust $
+      find (\(a, b, c) -> a + b + c == 1000) pythagoreanTriplets
 
 -------------------------------------
 -- Problem 10: Summation of primes --
 -------------------------------------
 problem10 :: Int
-problem10 = sum $ takeWhile (<2000000) primes
+problem10 = sum $ takeWhile (< 2000000) primes
 
 -------------------------------------------
 -- Problem 11: Largest product in a grid --
 -------------------------------------------
 -- TODO: For when I actually know how to do 2D lists in Haskell 😅
-theGrid = [
-    [08, 02, 22, 97, 38, 15, 00, 40, 00, 75, 04, 05, 07, 78, 52, 12, 50, 77, 91, 08],
+theGrid =
+  [ [08, 02, 22, 97, 38, 15, 00, 40, 00, 75, 04, 05, 07, 78, 52, 12, 50, 77, 91, 08],
     [49, 49, 99, 40, 17, 81, 18, 57, 60, 87, 17, 40, 98, 43, 69, 48, 04, 56, 62, 00],
     [81, 49, 31, 73, 55, 79, 14, 29, 93, 71, 40, 67, 53, 88, 30, 03, 49, 13, 36, 65],
     [52, 70, 95, 23, 04, 60, 11, 42, 69, 24, 68, 56, 01, 32, 56, 71, 37, 02, 36, 91],
@@ -213,30 +244,32 @@ theGrid = [
     [04, 42, 16, 73, 38, 25, 39, 11, 24, 94, 72, 18, 08, 46, 29, 32, 40, 62, 76, 36],
     [20, 69, 36, 41, 72, 30, 23, 88, 34, 62, 99, 69, 82, 67, 59, 85, 74, 04, 36, 16],
     [20, 73, 35, 29, 78, 31, 90, 01, 74, 31, 49, 71, 48, 86, 81, 16, 23, 57, 05, 54],
-    [01, 70, 54, 71, 83, 51, 54, 69, 16, 92, 33, 48, 61, 43, 52, 01, 89, 19, 67, 48]]
+    [01, 70, 54, 71, 83, 51, 54, 69, 16, 92, 33, 48, 61, 43, 52, 01, 89, 19, 67, 48]
+  ]
 
-problem11 = [(i, x) | (i, x) <- zip [1..] theGrid]
-
+problem11 = [(i, x) | (i, x) <- zip [1 ..] theGrid]
 
 ----------------------------------------------------
 -- Problem 12: Highly divisible triangular number --
 ----------------------------------------------------
 triangleNumbers :: [Int]
-triangleNumbers = [x * (x + 1) `quot` 2 | x <- [1..]]
+triangleNumbers = [x * (x + 1) `quot` 2 | x <- [1 ..]]
 
 -- Super slow way of finding factors
 factors' :: Int -> [Int]
-factors' x = [y | y <- [1..x], x `rem` y == 0]
+factors' x = [y | y <- [1 .. x], x `rem` y == 0]
 
 -- TODO: A bit better but still slow
 factors :: Int -> [Int]
-factors = factors 2
-    where factors x y
-            | x^2 > y = [1, y]
-            | x^2 == y = [x, 1, y]
-            | y `mod` x == 0 = x:(y `div` x):result
-            | otherwise = result
-            where result = factors (x+1) y
+factors = getFactors 2
+  where
+    getFactors x y
+      | x ^ 2 > y = [1, y]
+      | x ^ 2 == y = [x, 1, y]
+      | y `mod` x == 0 = x : (y `div` x) : result
+      | otherwise = result
+      where
+        result = getFactors (x + 1) y
 
 numFactors :: Int -> Int
 numFactors = length . factors
@@ -248,8 +281,8 @@ problem12 = fromJust $ find (\x -> numFactors x > 500) triangleNumbers
 -- Problem 13: Large sum  --
 ----------------------------
 manyDigits :: [Integer]
-manyDigits = [
-    37107287533902102798797998220837590246510135740250,
+manyDigits =
+  [ 37107287533902102798797998220837590246510135740250,
     46376937677490009712648124896970078050417018260538,
     74324986199524741059474233309513058123726617309629,
     91942213363574161572522430563301811072406154908250,
@@ -348,7 +381,8 @@ manyDigits = [
     77158542502016545090413245809786882778948721859617,
     72107838435069186155435662884062257473692284509516,
     20849603980134001723930671666823555245252804609722,
-    53503534226472524250874054075591789781264330331690]
+    53503534226472524250874054075591789781264330331690
+  ]
 
 problem13 :: [Char]
 problem13 = slice 0 10 $ (show . sum) [x | x <- manyDigits]
@@ -359,22 +393,24 @@ problem13 = slice 0 10 $ (show . sum) [x | x <- manyDigits]
 -- TODO: My solution is mega slow once again. IDK how to really optimize it though. Maybe memoization
 collatz :: Int -> [Int]
 collatz x
-    | x == 1 = [x]
-    | even x = x:collatz (x `quot` 2)
-    | otherwise = x:collatz (3 * x + 1)
+  | x == 1 = [x]
+  | even x = x : collatz (x `quot` 2)
+  | otherwise = x : collatz (3 * x + 1)
 
 collatzSequences :: [[Int]]
-collatzSequences = [collatz x | x <- [1..]]
+collatzSequences = [collatz x | x <- [1 ..]]
 
 problem14 :: (Int, Int)
-problem14 = maximumBy (comparing snd)
-    [(x, length y) | (x, y) <- take 999999 $ zip [1..] collatzSequences]
+problem14 =
+  maximumBy
+    (comparing snd)
+    [(x, length y) | (x, y) <- take 999999 $ zip [1 ..] collatzSequences]
 
 -------------------------------
 -- Problem 15: Lattice paths --
 -------------------------------
 factorial :: Int -> Int
-factorial x = product [2..x]
+factorial x = product [2 .. x]
 
 -- Found this brute force solution that essentially makes pascals triangle but rotated.
 -- After that it indexes into the triangle to find the solution
@@ -396,7 +432,24 @@ digitSum :: Int -> Int
 digitSum x = sum [read [y] | y <- show x]
 
 problem16 :: Int
-problem16 = digitSum $ 2^1000
+problem16 = digitSum $ 2 ^ 1000
 
 main :: IO ()
-main = print $ take 50 primes
+main =
+  do
+    print $ problem1 (10 :: Integer)
+    print problem2
+    print problem3
+    print problem4
+    print problem5
+    print problem6
+    print problem7
+    print problem8
+    -- print problem9
+    print problem10
+    print problem11
+    print problem12
+    print problem13
+    print problem14
+    print problem15
+    print problem16
