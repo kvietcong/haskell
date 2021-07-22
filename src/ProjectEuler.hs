@@ -23,13 +23,11 @@ getFib x
   | otherwise = getFib (x -1) + getFib (x -2)
 
 fib :: [Int]
-fib = [getFib x | x <- [0 ..]]
+fib = [getFib x | x <- [0..]]
 
 fibDynamic :: Int -> Int
-fibDynamic 0 = 0
-fibDynamic 1 = 1
 fibDynamic n = fibs !! n
-    where fibs = fibDynamic 0:fibDynamic 1:[fibs !! (x-1) + fibs !! (x-2) | x <- [2..]]
+    where fibs = 0:1:[fibs !! (x-1) + fibs !! (x-2) | x <- [2..]]
 
 fib4mil :: [Int]
 fib4mil = takeWhile (< 4000000) fib
@@ -88,7 +86,7 @@ problem4 =
 -- Problem 5: Smallest Multiple --
 ----------------------------------
 -- These solutions are pretty slow tbh
--- #TODO: Find a way to do this better
+-- TODO: Find a way to do this better
 smallestMultiple' :: Int -> Int -> Int
 smallestMultiple' x y =
   head
@@ -207,7 +205,7 @@ pythagoreanTriplets =
 productTriplet :: (Int, Int, Int) -> Int
 productTriplet (a, b, c) = a * b * c
 
--- #TODO: Find a way to do this better (Monads)
+-- TODO: Find a way to do this better (Monads)
 problemNine :: Int
 problemNine =
   productTriplet $
