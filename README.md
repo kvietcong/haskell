@@ -9,7 +9,7 @@ Read my long winded rant below if you're interested in my experience learning it
 Haskell is a really elegant language. This was my first Functional Programming
 Language and the paradigm is really interesting. Having functions so central
 to the process made function composition and modularity seem trivial at times.
-The fact that Haskell is also pure was awe inspiring at times as it started
+The fact that Haskell is also pure was awe inspiring as it started
 becoming more "math-like" in its wonder. It seemed like this cool combination
 of math and programming. An example from this would be infinite data structures
 and how they can be used. They just make solutions so clean at times and
@@ -44,14 +44,14 @@ and the ecosystem.
     not work on Windows for me. The most annoying being input. I feel like Windows IO with
     Haskell is absolutely impossible. I know I could just use WSL or move to Linux (the superior OS XD)
     but it would have been nice if Windows support wasn't as bad
-- Sadly, at least to me it felt like it, the Haskell ecosystem was the most user friendly. I appreciate
+- Sadly, at least to me it felt like it, the Haskell ecosystem wasn't the most user friendly. I appreciate
     the vast amount of volunteer work that has gone into making some really great libraries but the
-    ecosystem as a whole lacks a lot of clear documentation and good beginner guides. It was quite hard
+    ecosystem as a whole lacks a lot of clear documentation (for a layman like me) and good beginner guides. It was quite hard
     to learn some things (like I didn't even know about Lenses until I started using libraries) and
     it feels like going further in Haskell takes a lot of individual effort. While there's nothing wrong
     with putting in effort, it would've been a lot nicer if there were more user friendly things in the
     Haskell ecosystem. (I'm hopeful the Haskell Foundation will help fix this)
 
 Overall, I really like Haskell. While I don't think I'll be using it to create any bigger projects
-anytime soon, I find it a really nice language.
+anytime soon, I find it a really nice language. It will always hold a place in my heart 💘
 
