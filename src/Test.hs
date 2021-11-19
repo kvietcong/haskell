@@ -16,7 +16,7 @@ doubleUs x y = doubleMe x + doubleMe y
 maximum' :: (Ord a) => [a] -> a
 maximum' [] = error "You okay?"
 maximum' [x] = x
-maximum' (x:y) = max x (maximum' y)
+maximum' (x:xs) = max x (maximum' xs)
 
 maximum'' :: (Ord a) => [a] -> a
 maximum'' [] = error "You okay?"
@@ -77,6 +77,7 @@ doubleUp (x1:x2:xs)
     | x1 == x2  = x1:x2:doubleUp xs
     | otherwise = x1:x1:doubleUp (x2:xs)
 
+main :: IO ()
 main = do
     putStrLn "Hello, what's your name?"
     name <- getLine

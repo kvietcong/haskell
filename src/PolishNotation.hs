@@ -13,9 +13,15 @@ data Operator = Unary (Float -> Float)
               | Binary (Float -> Float -> Float)
               | Nary ([Float] -> Float)
 
+-- Just make types more strict so that compiler doesn't give warnings
+fromInt :: Int -> Float
+fromInt = fromIntegral
+
 -- |All available operators for the program
 operators :: [(String, Operator)]
-operators = [ ("log", Unary log)
+operators = [ ("logE", Unary log) -- log base e
+            , ("log", Unary $ logBase 10)
+            , ("lg", Unary $ logBase 2)
             , ("sqrt", Unary sqrt)
             , ("exp", Unary exp)
             , ("sin", Unary sin)
@@ -24,9 +30,9 @@ operators = [ ("log", Unary log)
             , ("sinh", Unary sinh)
             , ("cosh", Unary cosh)
             , ("tanh", Unary tanh)
-            , ("round", Unary $ fromIntegral . round)
-            , ("ceiling", Unary $ fromIntegral . ceiling)
-            , ("floor", Unary $ fromIntegral . floor)
+            , ("round", Unary $ fromInt . round)
+            , ("ceiling", Unary $ fromInt . ceiling)
+            , ("floor", Unary $ fromInt . floor)
 
             , ("+", Binary (+))
             , ("*", Binary (*))
@@ -47,6 +53,8 @@ computePolishStatement isReversed
     | isReversed = head . foldl' (flip compute) [] . words
     | otherwise = head . foldr compute [] . words
     where compute next nums
+            -- Since we know that opLookup is successful,
+            -- we can extract an operation without error.
             | isJust opLookup = case operator of
                                   Unary op -> op x:xs
                                   Binary op -> if isReversed
@@ -64,21 +72,25 @@ computePolishStatement isReversed
 -- |Repeatable prompt for polish statement inputs
 initiatePolishPrompt :: IO ()
 initiatePolishPrompt = do
-    putStrLn $ '\n':"Polish or Reverse Polish? (p for Polish)"
-    isReversed <- (/= "p") <$> getLine
+    putStrLn $ '\n':"Polish or Reverse Polish? [p]/r"
+    isReversed <- (== "r") <$> getLine
 
     putStrLn $
         if isReversed
            then '\n':"Please enter your Reverse Polish statement"
            else '\n':"Please enter your Polish statement"
     putStrLn "Use Space Delimiters"
-    polishStatement <- getLine
 
+    polishStatement <- getLine
     print $ computePolishStatement isReversed polishStatement
 
-    putStrLn $ '\n':"Continue? [y/n]"
-    willContinue <- flip elem ["yes", "y"] <$> getLine
-    if willContinue then initiatePolishPrompt else putStrLn $ '\n':"Bye!"
+    -- Alternative way to compute the statement
+    -- result <- computePolishStatement isReversed <$> getLine
+    -- print result
+
+    putStrLn $ '\n':"Continue? [y]/n"
+    willNotContinue <- flip elem ["no", "n"] <$> getLine
+    if willNotContinue then putStrLn $ '\n':"Bye!" else initiatePolishPrompt
 
 -- |Program entry point
 main :: IO ()
@@ -134,4 +146,3 @@ reversePolish' x
 reversePolish'' :: String -> Float
 reversePolish'' = read . head . reversePolish' . words
 -}
-

@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+
 import Reanimate
 import Reanimate.Scene
 import Control.Lens.Operators
@@ -66,8 +67,8 @@ centerItem time svg = scene $ do
     oShow item
     oTweenS item time goCenter
 
-fadeInEulerIdenity :: Animation 
-fadeInEulerIdenity = environment
+fadeInEulerIdentity :: Animation
+fadeInEulerIdentity = environment
     $ pauseAtEnd 0.5
     $ applyE (overEnding 1 fadeOutE)
         $ pauseAtEnd 2
@@ -82,7 +83,7 @@ fadeInEulerIdenity = environment
                    (centerItem 2 $ head equationParts))
 
 main :: IO ()
-main = reanimate fadeInEulerIdenity
+main = reanimate fadeInEulerIdentity
 
 -- Nord Color Palette
 nord0 :: PixelRGBA8
@@ -134,19 +135,7 @@ nord15 :: PixelRGBA8
 nord15 = PixelRGBA8 180 142 173 255
 
 nordPalette :: [PixelRGBA8]
-nordPalette = [ nord0
-              , nord1
-              , nord2
-              , nord3
-              , nord4
-              , nord5
-              , nord6
-              , nord7
-              , nord8
-              , nord9
-              , nord10
-              , nord11
-              , nord12
-              , nord13
-              , nord14
-              , nord15 ]
+nordPalette = [ nord0,  nord1,  nord2,  nord3
+              , nord4,  nord5,  nord6,  nord7
+              , nord8,  nord9,  nord10, nord11
+              , nord12, nord13, nord14, nord15 ]
